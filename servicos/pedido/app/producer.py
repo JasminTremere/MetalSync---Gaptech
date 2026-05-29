@@ -1,0 +1,1 @@
+# Esqueleto vazio exigido pelo projeto
