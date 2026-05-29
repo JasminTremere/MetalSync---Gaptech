@@ -1,8 +1,12 @@
-from fastapi import FastAPI
+FROM python:3.11-slim
 
-app = FastAPI(title="MetalSync – Serviço de Pedido", version="1.0.0")
+WORKDIR /app
 
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-@app.get("/health")
-async def health():
-    return {"status": "ok", "servico": "pedido"}
+COPY . .
+
+# Sobrescreva o CMD ao usar este Dockerfile para cada mock:
+# docker-compose define o command por serviço
+CMD ["python", "mock_antifraude.py"]
