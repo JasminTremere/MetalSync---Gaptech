@@ -27,7 +27,8 @@ def callback(ch, method, properties, body):
         print(f"[Catálogo Gaptech] Estoque atualizado para ID: {correlation_id}")
         time.sleep(TAXA_CATALOGO)
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(host=BROKER_HOST))
+credenciais = pika.PlainCredentials('gaptech', 'gaptech_suporte')
+connection = pika.BlockingConnection(pika.ConnectionParameters(host=BROKER_HOST, credentials=credenciais))
 channel = connection.channel()
 
 channel.queue_declare(queue='pedido.eventos')
