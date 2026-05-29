@@ -3,7 +3,7 @@ import json
 import pika
 import pymysql
 from dotenv import load_dotenv
-
+import streamlit as st
 load_dotenv()
 
 # Conexão com o Banco de Dados da HostGator
