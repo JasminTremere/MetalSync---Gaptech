@@ -21,8 +21,6 @@ services:
     container_name: shopflow-pedido
     ports:
       - "8001:8001"
-    env_file:
-      - .env  # Garante a leitura dinâmica das credenciais da HostGator
     environment:
       - PORT=8001
       - BROKER_HOST=rabbitmq
@@ -35,8 +33,6 @@ services:
     container_name: shopflow-pagamento
     ports:
       - "8002:8002"
-    env_file:
-      - .env  # Garante a leitura dinâmica das credenciais da HostGator
     environment:
       - PORT=8002
       - BROKER_HOST=rabbitmq
@@ -50,8 +46,6 @@ services:
     container_name: shopflow-logistica
     ports:
       - "8003:8003"
-    env_file:
-      - .env  # Garante a leitura dinâmica das credenciais da HostGator
     environment:
       - PORT=8003
       - BROKER_HOST=rabbitmq
@@ -60,13 +54,11 @@ services:
         condition: service_healthy
 
   mock_antifraude:
-    build: ./servicos/pedido
+    build: ./servicos/pedido # reaproveita a imagem base python
     container_name: mock-antifraude
     command: python /app_mock/mock_antifraude.py
     volumes:
       - ./mocks:/app_mock
-    env_file:
-      - .env
     environment:
       - BROKER_HOST=rabbitmq
     depends_on:
@@ -79,8 +71,6 @@ services:
     command: python /app_mock/mock_catalogo.py
     volumes:
       - ./mocks:/app_mock
-    env_file:
-      - .env
     environment:
       - BROKER_HOST=rabbitmq
     depends_on:
@@ -92,12 +82,7 @@ services:
     container_name: shopflow-dashboard
     ports:
       - "8050:8050"
-    # CORREÇÃO: Instala as dependências e roda o seu arquivo real sem apagá-lo
-    command: sh -c "pip install streamlit requests pandas pymysql && streamlit run app.py --server.port 8050 --server.address 0.0.0.0"
+    command: sh -c "pip install streamlit && echo 'st.title(\"MetalSync Esqueleto\")' > app.py && streamlit run app.py --server.port 8050 --server.address 0.0.0.0"
     working_dir: /app
-    volumes:
-      - ./dashboard/app:/app  # Mapeia a sua pasta local de desenvolvimento do Dashboard
-    env_file:
-      - .env
     depends_on:
       - pedido
