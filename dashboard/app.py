@@ -73,7 +73,7 @@ with aba_saude:
         col3.error("🔴 Serviço Logística: OFFLINE")
 
 # ==========================================
-# ABA 2: COMUNICAÇÃO AO VIVO (CORRIGIDA)
+# ABA 2: COMUNICAÇÃO AO VIVO (VERSÃO FINAL BLINDADA)
 # ==========================================
 with aba_comunicacao:
     st.subheader("Fluxo de Mensageria e Eventos Recentes")
@@ -85,10 +85,21 @@ with aba_comunicacao:
         # Cria o DataFrame bruto com o que veio da API
         df = pd.DataFrame(pedidos_recentes)
         
-        # Força a conversão de todas as colunas para string para evitar quebras de exibição
+        # Força a conversão de dados para string para evitar quebras
         df = df.astype(str)
         
-        # Exibe a tabela bruta ocupando a largura total da tela de forma responsiva
+        # Garante a ordem e renomeia de forma amigável direto nas colunas existentes
+        colunas_exibicao = {
+            "pedido_id": "ID do Pedido",
+            "correlation_id": "Correlation ID",
+            "status": "Status da Saga",
+            "data_emissao": "Data/Hora Emissão"
+        }
+        
+        # Filtra e renomeia apenas as colunas que realmente existem no DataFrame
+        df = df.rename(columns={k: v for k, v in colunas_exibicao.items() if k in df.columns})
+        
+        # Exibe a tabela elegante ocupando a largura total da tela
         st.dataframe(df, use_container_width=True)
     else:
         st.info("Aguardando novas mensagens trafegarem pelas filas do RabbitMQ...")
