@@ -6,7 +6,7 @@ import os
 # Configuração global da página
 st.set_page_config(page_title="MetalSync - Dashboard Express", layout="wide", initial_sidebar_state="expanded")
 
-st.title("📊 MetalSync — Dashboard Express (Módulo 4)")
+st.title("📊 MetalSync — Dashboard Express")
 st.markdown("Monitoramento de Infraestrutura e KPIs de Negócio em Tempo Real.")
 st.markdown("---")
 
