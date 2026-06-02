@@ -6,11 +6,11 @@ from models import Envelope
 
 def conectar_db():
     return pymysql.connect(
-        host="162.241.3.46",
-        user="jeff1591_db_user",
-        password="0~nh1U!.y89|",
-        database="jeff1591_Gaptech",
-        port=3306,
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASS"),
+        database=os.getenv("DB_NAME"),
+        port=int(os.getenv("DB_PORT", 3306)),
         cursorclass=pymysql.cursors.DictCursor
     )
 
