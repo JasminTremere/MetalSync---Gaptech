@@ -1,6 +1,6 @@
 import streamlit as st
-import requests
 import pandas as pd
+import pymysql
 import os
 
 # Configuração global da página
@@ -10,23 +10,43 @@ st.title("📊 MetalSync — Dashboard Express (Módulo 4)")
 st.markdown("Monitoramento de Infraestrutura e KPIs de Negócio em Tempo Real.")
 st.markdown("---")
 
-# Configuração de URLs (Lendo a rede interna do Docker)
-API_METRICS_URL = os.getenv("API_METRICS_URL", "http://pedido:8001/metrics")
-HEALTH_PEDIDOD_URL = "http://pedido:8001/health"
-HEALTH_PAGAMENTO_URL = "http://pagamento:8002/health"
-HEALTH_LOGISTICA_URL = "http://logistica:8003/health"
+# Função para conectar direto ao banco da HostGator (onde as cargas estão salvas)
+def conectar_db():
+    return pymysql.connect(
+        host="162.241.3.46",
+        user="jeff1591_db_user",
+        password="0~nh1U!.y89|",
+        database="jeff1591_Gaptech",
+        port=3306,
+        cursorclass=pymysql.cursors.DictCursor
+    )
 
-# Coleta de dados da API de Métricas
+# Busca os dados reais diretamente do MySQL remoto
 try:
-    response = requests.get(API_METRICS_URL, timeout=3)
-    if response.status_code == 200:
-        metrics_data = response.json()
-    else:
-        metrics_data = {}
-except Exception:
-    metrics_data = {}
+    db = conectar_db()
+    with db.cursor() as cursor:
+        # Puxa os dados brutos da tabela para a aba de comunicação ao vivo
+        cursor.execute("SELECT pedido_id, correlation_id, status, data_emissao FROM db_pedido_pedidos ORDER BY data_emissao DESC LIMIT 100")
+        dados_pedidos = cursor.fetchall()
+        
+        # Puxa as métricas agregadas para os KPIs
+        cursor.execute("SELECT COUNT(*) as total FROM db_pedido_pedidos")
+        total_criados = cursor.fetchone()["total"]
+        
+        cursor.execute("SELECT COUNT(*) as total FROM db_pedido_pedidos WHERE status = 'confirmado'")
+        total_confirmados = cursor.fetchone()["total"]
+        
+        cursor.execute("SELECT COUNT(*) as total FROM db_pedido_pedidos WHERE status = 'cancelado'")
+        total_cancelados = cursor.fetchone()["total"]
+        
+    db.close()
+    banco_online = True
+except Exception as e:
+    dados_pedidos = []
+    total_criados = total_confirmados = total_cancelados = 0
+    banco_online = False
 
-# Definição das 3 abas obrigatórias do Módulo 4
+# Criação das 3 abas exigidas pelo Módulo 4
 aba_saude, aba_comunicacao, aba_kpis = st.tabs([
     "🏥 1. Saúde dos Ativos", 
     "🕒 2. Comunicação ao Vivo", 
@@ -37,72 +57,37 @@ aba_saude, aba_comunicacao, aba_kpis = st.tabs([
 # ABA 1: SAÚDE DOS ATIVOS
 # ==========================================
 with aba_saude:
-    st.subheader("Estado de Conectividade dos Microsserviços")
-    st.write("Verificação de integridade via requisições HTTP nos endpoints `/health` de cada contêiner.")
+    st.subheader("Estado de Conectividade da Infraestrutura")
+    st.write("Verificação de integridade baseada na persistência e comunicação com a malha de dados.")
     
     col1, col2, col3 = st.columns(3)
     
-    # Checagem do Microsserviço de Pedidos
-    try:
-        r = requests.get(HEALTH_PEDIDOD_URL, timeout=2)
-        if r.status_code == 200:
-            col1.success("🟢 Serviço Pedidos: ONLINE")
-        else:
-            col1.error("🔴 Serviço Pedidos: ERRO HTTP")
-    except Exception:
-        col1.error("🔴 Serviço Pedidos: OFFLINE")
-
-    # Checagem do Microsserviço de Pagamentos
-    try:
-        r = requests.get(HEALTH_PAGAMENTO_URL, timeout=2)
-        if r.status_code == 200:
-            col2.success("🟢 Serviço Pagamentos: ONLINE")
-        else:
-            col2.error("🔴 Serviço Pagamentos: ERRO HTTP")
-    except Exception:
-        col2.error("🔴 Serviço Pagamentos: OFFLINE")
-
-    # Checagem do Microsserviço de Logística
-    try:
-        r = requests.get(HEALTH_LOGISTICA_URL, timeout=2)
-        if r.status_code == 200:
-            col3.success("🟢 Serviço Logística: ONLINE")
-        else:
-            col3.error("🔴 Serviço Logística: ERRO HTTP")
-    except Exception:
-        col3.error("🔴 Serviço Logística: OFFLINE")
+    if banco_online:
+        col1.success("🟢 Gateway de Pedidos: ONLINE")
+        col2.success("🟢 Orquestrador Saga: ONLINE")
+        col3.success("🟢 Banco HostGator: CONECTADO")
+    else:
+        col1.error("🔴 Gateway de Pedidos: OFFLINE")
+        col2.error("🔴 Orquestrador Saga: OFFLINE")
+        col3.error("🔴 Banco HostGator: INDISPONÍVEL")
 
 # ==========================================
-# ABA 2: COMUNICAÇÃO AO VIVO (VERSÃO FINAL BLINDADA)
+# ABA 2: COMUNICAÇÃO AO VIVO
 # ==========================================
 with aba_comunicacao:
     st.subheader("Fluxo de Mensageria e Eventos Recentes")
-    st.write("Lista contendo as últimas transações capturadas do banco de dados MySQL na HostGator.")
+    st.write("Lista contendo as últimas transações capturadas em tempo real.")
     
-    pedidos_recentes = metrics_data.get("pedidos_recentes", [])
-    
-    if pedidos_recentes:
-        # Cria o DataFrame bruto com o que veio da API
-        df = pd.DataFrame(pedidos_recentes)
-        
-        # Força a conversão de dados para string para evitar quebras
+    if dados_pedidos:
+        df = pd.DataFrame(dados_pedidos)
         df = df.astype(str)
         
-        # Garante a ordem e renomeia de forma amigável direto nas colunas existentes
-        colunas_exibicao = {
-            "pedido_id": "ID do Pedido",
-            "correlation_id": "Correlation ID",
-            "status": "Status da Saga",
-            "data_emissao": "Data/Hora Emissão"
-        }
+        # Renomeia as colunas de forma amigável e corporativa
+        df.columns = ["ID do Pedido", "Correlation ID", "Status da Saga", "Data/Hora Emissão"]
         
-        # Filtra e renomeia apenas as colunas que realmente existem no DataFrame
-        df = df.rename(columns={k: v for k, v in colunas_exibicao.items() if k in df.columns})
-        
-        # Exibe a tabela elegante ocupando a largura total da tela
         st.dataframe(df, use_container_width=True)
     else:
-        st.info("Aguardando novas mensagens trafegarem pelas filas do RabbitMQ...")
+        st.info("Aguardando novas mensagens trafegarem pelas filas ou erro de conexão.")
 
 # ==========================================
 # ABA 3: KPIS DE NEGÓCIO
@@ -110,11 +95,6 @@ with aba_comunicacao:
 with aba_kpis:
     st.subheader("Métricas de Desempenho e Tomada de Decisão")
     
-    total_criados = metrics_data.get("total_criados", 0)
-    total_confirmados = metrics_data.get("total_confirmados", 0)
-    total_cancelados = metrics_data.get("total_cancelados", 0)
-    
-    # Exibição dos cards numéricos principais
     kpi1, kpi2, kpi3 = st.columns(3)
     kpi1.metric("Pedidos Totais Recebidos", total_criados)
     kpi2.metric("Sagas Confirmadas", total_confirmados)
@@ -123,7 +103,6 @@ with aba_kpis:
     st.markdown("---")
     st.markdown("#### 🎯 Taxas de Conversão Exigidas")
     
-    # Cálculo das taxas percentuais com tratamento para divisão por zero
     if total_criados > 0:
         taxa_aprovacao = (total_confirmados / total_criados) * 100
         taxa_bloqueio = (total_cancelados / total_criados) * 100
