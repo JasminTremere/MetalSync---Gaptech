@@ -3,8 +3,16 @@ from fastapi import FastAPI
 import os
 import pymysql
 from consumer import iniciar_consumer, conectar_db
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="MetalSync - Serviço de Pedidos")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Permite requisições de qualquer origem (seu Live Server incluso)
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 def startup():
@@ -15,30 +23,48 @@ def startup():
 def health():
     return {"status": "ok", "servico": "pedido"}
 
-# ROTA DO POST CORRIGIDA PARA O SEU BANCO REAL
-@app.post("/pedidos")
+# No seu pedido/app/main.py
+@app.get("/api/pedidos")
+def listar_pedidos():
+    db = conectar_db()
+    try:
+        with db.cursor() as cursor:
+            cursor.execute("SELECT * FROM db_pedido_pedidos ORDER BY data_emissao DESC")
+            pedidos = cursor.fetchall()
+            # Converte itens_json de volta para objeto para o JS
+            for p in pedidos:
+                if p.get('itens_json'):
+                    p['itens'] = json.loads(p['itens_json'])
+            return pedidos
+    finally:
+        db.close()
+
+@app.post("/api/novo-pedido") # Ajustado para o nome que você definiu no fetch do HTML
 def criar_pedido(payload: dict):
     db = conectar_db()
     try:
         with db.cursor() as cursor:
-            correlation_id = payload.get("correlation_id")
-            inner_payload = payload.get("payload", {})
-            pedido_id = inner_payload.get("pedido_id")
-            valor_total = inner_payload.get("valor_total", 0.0)
+            # Captura os dados enviados pelo index.html
+            pedido_id = payload.get("pedido_id")
+            cliente = payload.get("cliente")
+            data = payload.get("data")
+            valor_total = payload.get("total")
+            itens_json = payload.get("itens_json") # O JSON da tabela que salvamos
 
-            # AJUSTE AQUI: Nome real da sua tabela mapeada no phpMyAdmin
+            # A sua tabela db_pedido_pedidos agora recebe tudo
             sql = """
-                INSERT INTO db_pedido_pedidos (pedido_id, correlation_id, status, pagamento_ok, fraude_ok, data_emissao)
-                VALUES (%s, %s, 'criado', NULL, NULL, NOW())
+                INSERT INTO db_pedido_pedidos 
+                (pedido_id, cliente, data_emissao, valor_total, itens_json, status)
+                VALUES (%s, %s, %s, %s, %s, 'criado')
             """
-            cursor.execute(sql, (pedido_id, correlation_id))
+            cursor.execute(sql, (pedido_id, cliente, data, valor_total, itens_json))
             db.commit()
             
-            print(f" [📝 API Pedidos] Estado salvo no banco. Pedido: {pedido_id[:6]}... | Saga Iniciada.")
-            return {"status": "pedido.criado", "pedido_id": pedido_id, "correlation_id": correlation_id}
+            print(f" [📝 Pedido Salvo] ID: {pedido_id} para o cliente: {cliente}")
+            return {"status": "sucesso", "pedido_id": pedido_id}
             
     except Exception as e:
-        print(f" [x] Erro ao registrar pedido na API: {e}")
+        print(f" [x] Erro ao salvar pedido: {e}")
         db.rollback()
         return {"status": "erro", "detalhes": str(e)}, 500
     finally:
