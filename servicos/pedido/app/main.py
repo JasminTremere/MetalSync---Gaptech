@@ -92,18 +92,36 @@ def listar_clientes():
     finally:
         db.close()
 
-# --- 4. ROTA HORÁRIOS OCUPADOS (Para o Painel Operacional) ---
+# --- SUBSTITUA A ROTA ANTIGA POR ESTA ---
 @app.get("/api/horarios-ocupados")
 def get_horarios_ocupados(data: str):
     db = conectar_db()
     try:
         with db.cursor() as cursor:
-            # Corrigido para 'horario'
-            sql = "SELECT horario FROM db_pedido_pedidos WHERE data_emissao = %s"
+            # Agora trazemos todos os dados necessários para montar os cards
+            sql = "SELECT pedido_id, cliente, horario, prioridade FROM db_pedido_pedidos WHERE data_emissao = %s ORDER BY horario"
             cursor.execute(sql, (data,))
             resultados = cursor.fetchall()
-            return {"ocupados": [r['horario'] for r in resultados if r['horario']]}
+            return {"pedidos_dia": resultados}
     except Exception as e:
+        print(f"Erro ao buscar horários: {e}")
+        return {"erro": str(e)}, 500
+    finally:
+        db.close()
+
+# --- ADICIONE ESTA NOVA ROTA LOGO ABAIXO ---
+@app.post("/api/atualizar-pedido")
+def atualizar_pedido(payload: dict):
+    db = conectar_db()
+    try:
+        with db.cursor() as cursor:
+            sql = "UPDATE db_pedido_pedidos SET data_emissao = %s, horario = %s WHERE pedido_id = %s"
+            cursor.execute(sql, (payload.get('data'), payload.get('horario'), payload.get('pedido_id')))
+            db.commit()
+            return {"status": "sucesso"}
+    except Exception as e:
+        db.rollback()
+        print(f"Erro ao atualizar: {e}")
         return {"erro": str(e)}, 500
     finally:
         db.close()
