@@ -23,13 +23,12 @@ def startup():
 def health():
     return {"status": "ok", "servico": "pedido"}
 
-@import requests # Certifique-se de que está importado no topo
+import requests # Certifique-se desta importação no topo
 
 @app.post("/api/novo-pedido")
 def criar_pedido(payload: dict):
     db = conectar_db()
     try:
-        # 1. Inserção no Banco
         with db.cursor() as cursor:
             sql = "INSERT INTO db_pedido_pedidos (pedido_id, cliente, data_emissao, horario, prioridade, valor_total, itens_json) VALUES (%s, %s, %s, %s, %s, %s, %s)"
             cursor.execute(sql, (
@@ -39,24 +38,26 @@ def criar_pedido(payload: dict):
             ))
             db.commit()
             print("Sucesso: Salvo no MySQL")
+
     except Exception as e:
         print(f"Erro banco: {e}")
-        return {"status": "erro", "msg": str(e)}, 500
+        return {"status": "erro", "msg": str(e)}
+
     finally:
         db.close()
 
-    # 2. Disparo para o n8n (FORA do bloco do banco para não travar)
+    # 2. Disparo para o n8n
+    # host.docker.internal aponta para o seu PC a partir de dentro do container (Windows/Mac)
+    url_n8n = "http://host.docker.internal:5678/webhook-test/1aa06e03-1e82-4e6f-b1bf-99430b0cdb7b"
+
     try:
-        # Tente usar o IP da máquina real se estiver no Docker, ou localhost se rodar local
-        # O timeout curto é para não travar a tela caso o n8n não responda
-        requests.post("http://localhost:5678/webhook/pedido", json=payload, timeout=3)
-        print("Sucesso: Enviado ao n8n")
+        resposta = requests.post(url_n8n, json=payload, timeout=5)
+        print(f"Sucesso: Dados enviados ao n8n. Status: {resposta.status_code}")
     except Exception as e:
-        print(f"Aviso: N8N não respondeu: {e}")
+        print(f"Aviso: n8n não respondeu, mas o pedido foi salvo no banco: {e}")
 
     return {"status": "ok"}
-    
-     
+
 # --- 2. ROTA LISTAR PEDIDOS ---
 @app.get("/api/pedidos")
 def listar_pedidos():
