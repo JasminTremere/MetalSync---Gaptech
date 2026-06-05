@@ -2,6 +2,7 @@ import threading
 from fastapi import FastAPI
 import os
 import pymysql
+import json
 from consumer import iniciar_consumer, conectar_db
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -39,34 +40,34 @@ def listar_pedidos():
     finally:
         db.close()
 
-@app.post("/api/novo-pedido") # Ajustado para o nome que você definiu no fetch do HTML
+@app.post("/api/novo-pedido")
 def criar_pedido(payload: dict):
+    # Print para debug - Olhe o terminal do seu VS Code/CMD após clicar no botão
+    print("PAYLOAD RECEBIDO PELO FASTAPI:", payload)
+    
     db = conectar_db()
     try:
         with db.cursor() as cursor:
-            # Captura os dados enviados pelo index.html
-            pedido_id = payload.get("pedido_id")
-            cliente = payload.get("cliente")
-            data = payload.get("data")
-            valor_total = payload.get("total")
-            itens_json = payload.get("itens_json") # O JSON da tabela que salvamos
+            # Usando .get(chave, valor_padrao) para evitar NULL se o campo não vier
+            pedido_id = payload.get('pedido_id')
+            cliente = payload.get('cliente')
+            data = payload.get('data')
+            horario = payload.get('horario', 'Não definido') # Padrão se vier nulo
+            prioridade = payload.get('prioridade', 'Media')  # Padrão se vier nulo
+            total = payload.get('total', 0)
+            itens_json = payload.get('itens_json')
 
-            # A sua tabela db_pedido_pedidos agora recebe tudo
             sql = """
                 INSERT INTO db_pedido_pedidos 
-                (pedido_id, cliente, data_emissao, valor_total, itens_json, status)
-                VALUES (%s, %s, %s, %s, %s, 'criado')
+                (pedido_id, cliente, data_emissao, horario, prioridade, valor_total, itens_json, status)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, 'criado')
             """
-            cursor.execute(sql, (pedido_id, cliente, data, valor_total, itens_json))
+            cursor.execute(sql, (pedido_id, cliente, data, horario, prioridade, total, itens_json))
             db.commit()
-            
-            print(f" [📝 Pedido Salvo] ID: {pedido_id} para o cliente: {cliente}")
-            return {"status": "sucesso", "pedido_id": pedido_id}
-            
+            return {"status": "sucesso"}
     except Exception as e:
-        print(f" [x] Erro ao salvar pedido: {e}")
-        db.rollback()
-        return {"status": "erro", "detalhes": str(e)}, 500
+        print("ERRO DETALHADO:", e)
+        return {"status": "erro", "msg": str(e)}, 500
     finally:
         db.close()
 
@@ -104,3 +105,11 @@ def metrics():
         return {"erro": str(e)}
     finally:
         db.close()
+
+@app.get("/api/horarios-ocupados/{data}")
+def listar_ocupados(data: str):
+    db = conectar_db()
+    with db.cursor() as cursor:
+        cursor.execute("SELECT horario FROM db_pedido_pedidos WHERE data_emissao = %s", (data,))
+        resultados = cursor.fetchall()
+        return [r['horario'] for r in resultados]

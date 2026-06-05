@@ -878,79 +878,63 @@
             showToast("<i class='fa-solid fa-clock text-blue-400'></i>", "Visualizando grade de Hoje");
         }
 
-        // RENDERIZA A GRADE INTERATIVA DE ATRASOS
-        function renderizarGradeGerenciador() {
-            const data = document.getElementById('orderDate').value;
-            const container = document.getElementById('managerSlotsContainer');
-            container.innerHTML = '';
+          // RENDERIZA A GRADE INTERATIVA DE ATRASOS
+function renderizarGradeGerenciador() {
+    const data = document.getElementById('orderDate').value;
+    const container = document.getElementById('managerSlotsContainer');
+    container.innerHTML = '';
 
-            const ocupados = agendamentosExistentes[data] || {};
+    // agendamentosExistentes agora deve estar vazio, 
+    // então a lógica de "agendado" será sempre false para slots sem pedidos reais
+    const ocupados = agendamentosExistentes[data] || {};
 
-            gradeSlots.forEach((slot, index) => {
-                const agendado = ocupados[slot];
-                let itemHtml = "";
+    gradeSlots.forEach((slot, index) => {
+        const agendado = ocupados[slot];
+        let itemHtml = "";
 
-                if (agendado) {
-                    let prioridadeColor = "text-blue-400 bg-blue-500/10 border-blue-500/20";
-                    let emoji = "🟡";
-                    if (agendado.prioridade === "Baixa") {
-                        prioridadeColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
-                        emoji = "🟢";
-                    } else if (agendado.prioridade === "Alta") {
-                        prioridadeColor = "text-red-400 bg-red-500/10 border-red-500/20";
-                        emoji = "🔴";
-                    }
+        if (agendado) {
+    // Lógica de visibilidade dos botões baseada na posição (index)
+    const ehOPrimeiro = index === 0;
+    
+    // Se for o primeiro: só mostra Reagendar e Excluir
+    // Se NÃO for o primeiro: mostra Passar Frente, Reagendar e Excluir
+    itemHtml = `
+        <div class="border border-slate-750 bg-slate-950 p-4 rounded-xl flex flex-col md:flex-row justify-between md:items-center gap-3">
+            <div class="flex flex-col gap-1.5">
+                </div>
+            
+            <div class="flex items-center gap-1.5 justify-end">
+                ${!ehOPrimeiro ? `
+                    <button onclick="passarPeçaNaFrente('${slot}')" class="bg-blue-600/15 hover:bg-blue-600/30 text-blue-400 p-2 rounded-lg border border-blue-500/20 text-[11px] font-bold transition-all">
+                        <i class="fa-solid fa-arrow-up"></i> Passar Frente
+                    </button>
+                ` : ''}
+                
+                <button onclick="iniciarReagendamentoSlot('${slot}')" class="bg-slate-800 hover:bg-slate-750 text-slate-300 p-2 rounded-lg border border-slate-700 text-[11px] font-bold transition-all">
+                    <i class="fa-solid fa-shuffle"></i> Reagendar
+                </button>
+                
+                <button onclick="liberarSlotGrade('${slot}')" class="bg-red-500/15 hover:bg-red-500/35 text-red-400 p-2 rounded-lg border border-red-500/20 text-[11px] transition-all">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+        </div>
+    `;
+} else {
+    // Se o slot estiver VAZIO (sem cliente), não mostra nenhum botão de ação
+    itemHtml = `
+        <div class="border border-slate-850 bg-slate-900/30 p-3.5 rounded-xl flex justify-between items-center text-slate-500 border-dashed">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-mono font-bold text-slate-600 bg-slate-950 px-2.5 py-0.5 rounded border border-slate-850">${slot}</span>
+                <span class="text-[10px] font-bold text-emerald-500 bg-emerald-500/5 border border-emerald-500/10 px-2 py-0.5 rounded uppercase">Livre</span>
+            </div>
+        </div>
+    `;
+}
+        container.insertAdjacentHTML('beforeend', itemHtml);
+    });
+}
 
-                    const showPassarNaFrente = index > 0;
-
-                    itemHtml = `
-                        <div class="border border-slate-750 bg-slate-950 p-4 rounded-xl flex flex-col md:flex-row justify-between md:items-center gap-3 shadow-md hover:border-slate-700 transition-all">
-                            <div class="flex flex-col gap-1.5">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs font-black text-white bg-slate-850 px-2.5 py-1 rounded border border-slate-700 font-mono">${slot}</span>
-                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${prioridadeColor}">
-                                        ${emoji} ${agendado.prioridade || 'Média'}
-                                    </span>
-                                </div>
-                                <div class="text-xs">
-                                    <span class="text-slate-500">Cliente:</span> <strong class="text-slate-300">${agendado.cliente}</strong>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-center gap-1.5 justify-end">
-                                ${showPassarNaFrente ? `
-                                    <button onclick="passarPeçaNaFrente('${slot}')" class="bg-blue-600/15 hover:bg-blue-600/30 text-blue-400 p-2 rounded-lg border border-blue-500/20 text-[11px] font-bold flex items-center gap-1 transition-all" title="Mover para cima na fila">
-                                        <i class="fa-solid fa-arrow-up text-[10px] animate-bounce"></i> Passar Frente
-                                    </button>
-                                ` : ''}
-                                
-                                <button onclick="iniciarReagendamentoSlot('${slot}')" class="bg-slate-800 hover:bg-slate-750 text-slate-300 p-2 rounded-lg border border-slate-700 text-[11px] font-bold flex items-center gap-1 transition-all" title="Mudar dia, hora ou prioridade">
-                                    <i class="fa-solid fa-shuffle text-[10px]"></i> Reagendar
-                                </button>
-                                
-                                <button onclick="liberarSlotGrade('${slot}')" class="bg-red-500/15 hover:bg-red-500/35 text-red-400 p-2 rounded-lg border border-red-500/20 text-[11px] transition-all" title="Excluir Ordem da grade">
-                                    <i class="fa-solid fa-trash-can text-[10px]"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    itemHtml = `
-                        <div class="border border-slate-850 bg-slate-900/30 p-3.5 rounded-xl flex justify-between items-center text-slate-500 border-dashed">
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-mono font-bold text-slate-600 bg-slate-950 px-2.5 py-0.5 rounded border border-slate-850">${slot}</span>
-                                <span class="text-[10px] font-bold text-emerald-500 bg-emerald-500/5 border border-emerald-500/10 px-2 py-0.5 rounded uppercase">Livre</span>
-                            </div>
-                            <button onclick="bloquearManual('${slot}')" class="text-slate-550 hover:text-slate-300 text-[10px] font-bold bg-slate-950 border border-slate-850 px-2.5 py-1 rounded hover:border-slate-700 transition-all">
-                                Reservar
-                            </button>
-                        </div>
-                    `;
-                }
-
-                container.insertAdjacentHTML('beforeend', itemHtml);
-            });
-        }
 
         // ALGORITMO: PASSAR A PEÇA NA FRENTE COM ATUALIZAÇÃO IMEDIATA
         function passarPeçaNaFrente(slot) {
