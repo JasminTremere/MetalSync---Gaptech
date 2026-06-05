@@ -130,7 +130,7 @@ def atualizar_pedido(payload: dict):
             return {"status": "sucesso"}
     except Exception as e:
         db.rollback()
-        print(f"Erro ao atualizar: {e}")
+        print("Dados recebidos:", payload)
         return {"erro": str(e)}, 500
     finally:
         db.close()
