@@ -853,19 +853,17 @@
         }
 
         function navegarDia(offset) {
-            const input = document.getElementById('orderDate');
-            const dataAtual = new Date(input.value + "T00:00:00");
-            dataAtual.setDate(dataAtual.getDate() + offset);
-            const novaDataStr = dataAtual.toISOString().split('T')[0];
-            input.value = novaDataStr;
-
-            popularMockAgendamentos(novaDataStr);
-            document.getElementById('managerDateDisplay').innerText = formatarDataBr(novaDataStr);
-            renderizarGradeGerenciador();
-            resetarSlotsDoDia();
-            showToast("<i class='fa-solid fa-clock text-blue-400'></i>", `Visualizando grade de ${formatarDataBr(novaDataStr)}`);
-        }
-
+    const input = document.getElementById('orderDate');
+    const data = new Date(input.value + "T00:00:00");
+    data.setDate(data.getDate() + offset);
+    
+    const novaData = data.toISOString().split('T')[0];
+    input.value = novaData;
+    
+    // Atualiza o display do modal e recarrega os slots
+    document.getElementById('managerDateDisplay').innerText = formatarDataBr(novaData);
+    renderizarGradeGerenciador();
+}
         function navegarDiaHoje() {
             const input = document.getElementById('orderDate');
             const hojeStr = new Date().toISOString().split('T')[0];
@@ -936,27 +934,25 @@ function renderizarGradeGerenciador() {
 }
 
 
-        // ALGORITMO: PASSAR A PEÇA NA FRENTE COM ATUALIZAÇÃO IMEDIATA
-        function passarPeçaNaFrente(slot) {
-            const data = document.getElementById('orderDate').value;
-            const index = gradeSlots.indexOf(slot);
+function passarPeçaNaFrente(slot) {
+    const data = document.getElementById('orderDate').value;
+    const index = gradeSlots.indexOf(slot);
+    if (index <= 0) return;
 
-            if (index <= 0) return; 
+    const slotAnterior = gradeSlots[index - 1];
+    const ocupados = agendamentosExistentes[data] || {};
 
-            const slotAnterior = gradeSlots[index - 1];
-            const ocupados = agendamentosExistentes[data] || {};
+    // Swap direto
+    const temp = ocupados[slot];
+    ocupados[slot] = ocupados[slotAnterior];
+    ocupados[slotAnterior] = temp;
 
-            // Executa a inversão/troca de posição (Sobe a atual, desce a anterior)
-            const temp = ocupados[slot];
-            ocupados[slot] = ocupados[slotAnterior]; 
-            ocupados[slotAnterior] = temp; 
-
-            agendamentosExistentes[data] = ocupados;
-            
-            // ATUALIZAÇÃO OPERACIONAL AUTOMÁTICA
-            renderizarGradeGerenciador();
-            showToast("<i class='fa-solid fa-arrow-up text-blue-400'></i>", "Fluxo operacional reordenado!");
-        }
+    // Se o destino ficou vazio e a origem também, limpa tudo
+    if (ocupados[slot] === undefined) delete ocupados[slot];
+    
+    renderizarGradeGerenciador();
+    showToast("<i class='fa-solid fa-arrow-up text-blue-400'></i>", "Ordem alterada!");
+}
 
         function liberarSlotGrade(slot) {
             const data = document.getElementById('orderDate').value;
@@ -985,46 +981,45 @@ function renderizarGradeGerenciador() {
             showToast("<i class='fa-solid fa-lock text-emerald-400'></i>", "Horário reservado manualmente!");
         }
 
-        // INICIALIZA SELETOR DE REAGENDAMENTO RÁPIDO COM DIA SEGUINTE E PRIORIDADE
-        function iniciarReagendamentoSlot(slot) {
-            slotOrigemTemporario = slot;
-            const dataOriginal = document.getElementById('orderDate').value;
-            const ocupados = agendamentosExistentes[dataOriginal] || {};
-            const pedido = ocupados[slot];
+        // Abre o submodal com o visual idêntico ao lançamento
+function iniciarReagendamentoSlot(slot) {
+    slotOrigemTemporario = slot;
+    const dataOriginal = document.getElementById('orderDate').value;
+    const pedido = agendamentosExistentes[dataOriginal][slot];
 
-            prioridadeReagendamentoTemporario = pedido.prioridade || "Media";
+    // Preenche o modal de reagendamento com os mesmos campos de Info do Pedido
+    document.getElementById('rescheduleModalSubtitle').innerText = `Pedido: ${pedido.id_pedido} | Cliente: ${pedido.cliente}`;
+    document.getElementById('targetDateSelector').value = dataOriginal;
+    
+    // Atualiza prioridade visualmente
+    setReschedulePrioridade(pedido.prioridade);
+    
+    document.getElementById('rescheduleSubModal').classList.remove('hidden');
+}
 
-            document.getElementById('rescheduleModalSubtitle').innerText = `Mover pedido de ${pedido.cliente} (${slot})`;
-            document.getElementById('targetDateSelector').value = dataOriginal;
-            
-            setReschedulePrioridade(prioridadeReagendamentoTemporario);
-            atualizarOpcoesSlotsDestino();
-
-            document.getElementById('rescheduleSubModal').classList.remove('hidden');
-        }
-
-        function atualizarOpcoesSlotsDestino() {
-            const targetDate = document.getElementById('targetDateSelector').value;
-            popularMockAgendamentos(targetDate);
-            
-            const ocupadosNoDestino = agendamentosExistentes[targetDate] || {};
-            const selector = document.getElementById('targetSlotSelector');
-            selector.innerHTML = '';
-
-            gradeSlots.forEach(targetSlot => {
-                const dataOriginal = document.getElementById('orderDate').value;
-                if (targetDate === dataOriginal && targetSlot === slotOrigemTemporario) {
-                    return;
-                }
-
-                const targetOcupado = ocupadosNoDestino[targetSlot];
-                const label = targetOcupado 
-                    ? `${targetSlot} (Trocar com ${targetOcupado.cliente.substring(0, 15)})` 
-                    : `${targetSlot} (Livre / Disponível)`;
-                
-                selector.insertAdjacentHTML('beforeend', `<option value="${targetSlot}">${label}</option>`);
-            });
-        }
+// Limpa o "lixo" e garante que a tabela de itens seja carregada corretamente
+function confirmarReagendamento() {
+    const targetDate = document.getElementById('targetDateSelector').value;
+    const targetSlot = document.getElementById('targetSlotSelector').value;
+    
+    // 1. Validação básica
+    if (!targetSlot) { alert("Selecione um horário destino!"); return; }
+    
+    // 2. Transfere os dados (O "coração" da operação)
+    const dataOriginal = document.getElementById('orderDate').value;
+    const pedido = agendamentosExistentes[dataOriginal][slotOrigemTemporario];
+    
+    // Move para o destino
+    if (!agendamentosExistentes[targetDate]) agendamentosExistentes[targetDate] = {};
+    agendamentosExistentes[targetDate][targetSlot] = pedido;
+    
+    // 3. Remove o lixo (limpa a origem)
+    delete agendamentosExistentes[dataOriginal][slotOrigemTemporario];
+    
+    fecharSubModalReagendar();
+    renderizarGradeGerenciador();
+    showToast("<i class='fa-solid fa-check text-emerald-400'></i>", "Pedido reagendado com sucesso!");
+}
 
         // Controle de Prioridade no Reagendamento
         function setReschedulePrioridade(nivel) {

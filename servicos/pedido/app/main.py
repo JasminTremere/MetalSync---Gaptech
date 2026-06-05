@@ -92,23 +92,32 @@ def listar_clientes():
     finally:
         db.close()
 
-# --- SUBSTITUA A ROTA ANTIGA POR ESTA ---
 @app.get("/api/horarios-ocupados")
 def get_horarios_ocupados(data: str):
-    db = conectar_db()
-    try:
-        with db.cursor() as cursor:
-            # Agora trazemos todos os dados necessários para montar os cards
-            sql = "SELECT pedido_id, cliente, horario, prioridade FROM db_pedido_pedidos WHERE data_emissao = %s ORDER BY horario"
-            cursor.execute(sql, (data,))
-            resultados = cursor.fetchall()
-            return {"pedidos_dia": resultados}
-    except Exception as e:
-        print(f"Erro ao buscar horários: {e}")
-        return {"erro": str(e)}, 500
+    # ... (código do banco) ...
+    resultados = cursor.fetchall()
+    # Certifique-se de que o nome aqui é exatamente o que o JS espera
+    return {"pedidos": resultados}
     finally:
         db.close()
 
+# Rota para mover pedido (trocar horário ou atualizar)
+@app.post("/api/mover-pedido")
+def mover_pedido(payload: dict):
+    db = conectar_db()
+    try:
+        with db.cursor() as cursor:
+            # Atualiza o horário do pedido específico
+            sql = "UPDATE db_pedido_pedidos SET horario = %s WHERE pedido_id = %s"
+            cursor.execute(sql, (payload.get('novo_horario'), payload.get('pedido_id')))
+            db.commit()
+            return {"status": "sucesso"}
+    except Exception as e:
+        db.rollback()
+        return {"erro": str(e)}, 500
+    finally:
+        db.close()
+        
 # --- ADICIONE ESTA NOVA ROTA LOGO ABAIXO ---
 @app.post("/api/atualizar-pedido")
 def atualizar_pedido(payload: dict):
