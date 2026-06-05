@@ -32,7 +32,6 @@
                 <button onclick="mostrarPaginaPedidos()" class="bg-slate-850 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-750 p-2.5 rounded-xl transition-all" title="Visualizar Pedidos Solicitados">
                     <i class="fa-solid fa-list-check text-blue-400 text-base"></i>
                 </button>
-                <!-- Botão do Painel Operacional da Grade reinserido -->
                 <button onclick="abrirGerenciadorGrade()" class="bg-slate-850 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-750 p-2.5 rounded-xl transition-all active:scale-95" title="Gerenciar Grade de Produção e Atrasos">
                     <i class="fa-solid fa-clock-rotate-left text-blue-400 text-base"></i>
                 </button>
@@ -41,8 +40,6 @@
     </header>
 
     <main id="viewLauncher" class="flex-grow max-w-5xl w-full mx-auto p-4 md:p-6 flex flex-col gap-6">
-        
-        <!-- INFORMAÇÕES DO PEDIDO COM HORÁRIO E PRIORIDADE -->
         <div class="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-md">
             <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
                 <h2 class="text-md font-semibold text-slate-200 flex items-center gap-2">
@@ -51,12 +48,14 @@
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="flex flex-col gap-1.5">
+                <div class="flex flex-col gap-1.5 relative">
                     <label for="clientName" class="text-xs font-semibold text-slate-400">Nome do Cliente *</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-user text-xs"></i></span>
-                        <input type="text" id="clientName" placeholder="Ex: Metalúrgica..." class="w-full bg-slate-900 border border-slate-800 rounded-lg py-2.5 pl-9 pr-3 text-sm text-slate-100 focus:ring-2 focus:ring-blue-500/50">
+                        <input type="text" id="clientName" autocomplete="off" onfocus="mostrarDropdownClientes()" oninput="filtrarDropdownClientes()" placeholder="Ex: Metalúrgica..." class="w-full bg-slate-900 border border-slate-800 rounded-lg py-2.5 pl-9 pr-3 text-sm text-slate-100 focus:ring-2 focus:ring-blue-500/50">
                     </div>
+                    <ul id="Clientes" class="hidden absolute top-[100%] left-0 w-full z-50 bg-slate-800 border border-slate-700 rounded-lg mt-1 max-h-40 overflow-y-auto shadow-xl custom-scrollbar">
+                    </ul>
                 </div>
 
                 <div class="flex flex-col gap-1.5">
@@ -87,7 +86,6 @@
             </div>
         </div>
 
-        <!-- Tabela Dinâmica de Itens -->
         <div class="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-md flex-grow flex flex-col justify-between">
             <div>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4 mb-4">
@@ -132,72 +130,50 @@
         </div>
     </main>
 
-    <!-- ========================================================= -->
-    <!-- MODAL: GERENCIADOR DE GRADE (CONTROLE DE ATRASOS) -->
-    <!-- ========================================================= -->
-    <div id="gridManagerModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all">
-        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-2xl w-full shadow-2xl flex flex-col gap-4 text-left transform scale-95 transition-transform duration-300">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <div class="flex items-center gap-2.5">
-                    <div class="bg-blue-600/10 text-blue-400 p-2 rounded-lg">
-                        <i class="fa-solid fa-clock-rotate-left text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-base font-bold text-white">Painel Operacional da Grade</h3>
-                        <p class="text-xs text-slate-400">Visualize os pedidos agendados para o dia selecionado</p>
-                    </div>
+    <main id="viewOrdersList" class="hidden flex-grow max-w-5xl w-full mx-auto p-4 md:p-6 flex flex-col gap-6">
+        <div class="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-md">
+            
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4 mb-6">
+                <div>
+                    <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-boxes-stacked text-blue-500"></i> Pedidos Solicitados
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">Dados reais do banco MySQL agrupados por data</p>
                 </div>
-                <button onclick="fecharGerenciadorGrade()" class="text-slate-500 hover:text-slate-300 transition-colors">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-
-            <div class="flex flex-col gap-4">
-                <div class="text-xs bg-slate-950 px-3.5 py-2.5 rounded-xl border border-slate-850 text-slate-400 flex justify-between items-center">
-                    <span>Fila Operacional para o dia:</span>
-                    <strong class="text-slate-200 font-mono text-sm" id="managerDateDisplay">04/06/2026</strong>
-                </div>
-
-                <!-- Container onde a lista de pedidos do dia será renderizada -->
-                <div id="managerSlotsContainer" class="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
-                    <!-- Gerado via JS (agora busca da API) -->
-                    <div class="text-center py-8 text-slate-500 text-xs italic">
-                        Carregando pedidos agendados...
-                    </div>
-                </div>
-
-                <!-- Setas de Navegação -->
-                <div class="flex items-center justify-between bg-slate-950 p-2 rounded-xl border border-slate-800/80 gap-2">
-                    <button onclick="navegarDiaGerenciador(-1)" class="flex-1 bg-slate-900 hover:bg-slate-800 text-slate-300 px-3 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
-                        <i class="fa-solid fa-circle-arrow-left text-blue-400"></i> Anterior
+                <div class="flex gap-2">
+                    <button onclick="limparFiltrosPedidos()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 font-semibold transition-all border border-slate-700">
+                        <i class="fa-solid fa-eraser"></i> Limpar Filtros
                     </button>
-                    <button onclick="navegarDiaHojeGerenciador()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-lg text-xs font-extrabold transition-all">
-                        Hoje
-                    </button>
-                    <button onclick="navegarDiaGerenciador(1)" class="flex-1 bg-slate-900 hover:bg-slate-800 text-slate-300 px-3 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
-                        Seguinte <i class="fa-solid fa-circle-arrow-right text-blue-400"></i>
+                    <button onclick="mostrarPaginaLancamento()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 font-semibold transition-all">
+                        <i class="fa-solid fa-arrow-left"></i> Voltar ao Lançamento
                     </button>
                 </div>
             </div>
 
-            <div class="flex items-center justify-between border-t border-slate-800 pt-4">
-                <span class="text-[10px] text-slate-500 flex items-center gap-1.5 max-w-sm">
-                    <i class="fa-solid fa-info-circle text-blue-500"></i> Aqui você pode visualizar os pedidos alocados. Funções de reagendamento em desenvolvimento.
-                </span>
-                <button onclick="fecharGerenciadorGrade()" class="bg-slate-850 hover:bg-slate-800 border border-slate-700 text-slate-300 font-semibold px-4 py-2 rounded-lg text-xs transition-all">
-                    Fechar
-                </button>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 bg-slate-900/60 p-4 rounded-xl border border-slate-800/80">
+                <div class="flex flex-col gap-1.5">
+                    <label for="filterClient" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Filtrar por Cliente</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-magnifying-glass text-xs"></i></span>
+                        <input type="text" id="filterClient" oninput="renderizarPaginaPedidos()" placeholder="Buscar cliente..." class="w-full bg-slate-950 border border-slate-800 rounded-lg py-2 pl-9 pr-3 text-xs text-slate-100 focus:ring-1 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label for="filterDate" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Filtrar por Data Específica</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-calendar text-xs"></i></span>
+                        <input type="date" id="filterDate" onchange="renderizarPaginaPedidos()" class="w-full bg-slate-950 border border-slate-800 rounded-lg py-2 pl-9 pr-3 text-xs text-slate-100 focus:ring-1 focus:ring-blue-500">
+                    </div>
+                </div>
             </div>
+
+            <div id="ordersCardsContainer" class="flex flex-col gap-6"></div>
         </div>
-    </div>
+    </main>
 
-
-    <!-- Modal de Feedback Geral -->
     <div id="feedbackModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl max-w-sm w-full shadow-2xl flex flex-col items-center text-center gap-4">
-            <div class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center text-2xl">
-                <i class="fa-solid fa-circle-check"></i>
-            </div>
+            <div class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center text-2xl"><i class="fa-solid fa-circle-check"></i></div>
             <div>
                 <h3 class="text-lg font-bold text-white">Lançamento Efetuado!</h3>
                 <p id="modalMessage" class="text-xs text-slate-400 mt-1 leading-relaxed">Operação concluída com sucesso!</p>
@@ -206,24 +182,240 @@
         </div>
     </div>
 
-    <!-- Toast -->
     <div id="toast" class="hidden fixed bottom-5 right-5 bg-slate-950 border border-slate-800 text-slate-200 px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-2.5 text-xs transition-all duration-300">
         <span id="toastIcon"><i class="fa-solid fa-info-circle text-blue-500"></i></span>
         <span id="toastMessage">Informativo</span>
     </div>
 
+    <!-- MODAL: GERENCIADOR DE GRADE -->
+<div id="gridManagerModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all">
+    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-2xl w-full shadow-2xl flex flex-col gap-4">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+            <h3 class="text-base font-bold text-white">Painel Operacional da Grade</h3>
+            <button onclick="fecharGerenciadorGrade()" class="text-slate-500 hover:text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="managerSlotsContainer" class="flex flex-col gap-3 max-h-[300px] overflow-y-auto custom-scrollbar">
+            <!-- Os horários aparecerão aqui -->
+        </div>
+    </div>
+</div>
+
     <script>
         let itens = [];
-        let dataGerenciadorAtual = "";
+        let todosPedidosBanco = []; 
+        let listaClientesBanco = []; // Guarda os clientes para o autocompletar
 
         window.onload = function() {
             const hoje = new Date().toISOString().split('T')[0];
             document.getElementById('orderDate').value = hoje;
-            dataGerenciadorAtual = hoje;
             itens = [{ id: Date.now(), quant: 1, descricao: "", valor: 0.00 }];
             renderizarTabela();
+            
+            // Carrega os clientes do banco para o Autocompletar
+            carregarOpcoesClientes();
         }
 
+        /* ----- LÓGICA DO AUTOCOMPLETAR DE CLIENTES (CUSTOMIZADO) ----- */
+        async function carregarOpcoesClientes() {
+            try {
+                const response = await fetch('http://localhost:8001/api/clientes');
+                if (!response.ok) return;
+                const data = await response.json();
+                if (data.clientes) {
+                    listaClientesBanco = data.clientes;
+                }
+            } catch (error) {
+                console.error("Erro ao carregar clientes:", error);
+            }
+        }
+
+        function mostrarDropdownClientes() {
+            filtrarDropdownClientes(); 
+        }
+
+        function filtrarDropdownClientes() {
+            const inputVal = document.getElementById('clientName').value.toLowerCase();
+            const dropdown = document.getElementById('dropdownClientes');
+            dropdown.innerHTML = '';
+
+            const filtrados = listaClientesBanco.filter(c => c.toLowerCase().includes(inputVal));
+
+            if (filtrados.length === 0) {
+                dropdown.classList.add('hidden');
+                return;
+            }
+
+            filtrados.forEach(c => {
+                const li = document.createElement('li');
+                li.className = "px-4 py-2.5 text-sm text-slate-300 hover:bg-blue-600 hover:text-white cursor-pointer transition-colors border-b border-slate-700/50 last:border-0";
+                li.innerText = c;
+                // Usamos mousedown em vez de click para agir antes do input perder o foco
+                li.onmousedown = () => { 
+                    document.getElementById('clientName').value = c;
+                    dropdown.classList.add('hidden');
+                };
+                dropdown.appendChild(li);
+            });
+
+            dropdown.classList.remove('hidden');
+        }
+
+        // Fecha o dropdown de clientes se clicar fora
+        document.addEventListener('click', function(e) {
+            if (e.target.id !== 'clientName') {
+                document.getElementById('dropdownClientes').classList.add('hidden');
+            }
+        });
+
+
+        /* ----- Lógica de Telas e Listagem ----- */
+        async function mostrarPaginaPedidos() {
+            document.getElementById('viewLauncher').classList.add('hidden');
+            document.getElementById('viewOrdersList').classList.remove('hidden');
+            
+            // Limpa os filtros ao abrir a tela para evitar sustos
+            limparFiltrosPedidos(false);
+            
+            await carregarPedidosDoBanco();
+        }
+
+        function mostrarPaginaLancamento() {
+            document.getElementById('viewOrdersList').classList.add('hidden');
+            document.getElementById('viewLauncher').classList.remove('hidden');
+            // Recarrega os clientes caso tenha criado um novo
+            carregarOpcoesClientes();
+        }
+
+        function limparFiltrosPedidos(renderizar = true) {
+            document.getElementById('filterClient').value = '';
+            document.getElementById('filterDate').value = '';
+            if (renderizar) renderizarPaginaPedidos();
+        }
+
+        async function carregarPedidosDoBanco() {
+            try {
+                const response = await fetch('http://localhost:8001/api/pedidos');
+                const data = await response.json();
+                if (data.pedidos) {
+                    todosPedidosBanco = data.pedidos;
+                    renderizarPaginaPedidos(); 
+                }
+            } catch (error) {
+                showToast("<i class='fa-solid fa-xmark text-red-500'></i>", "Erro ao conectar com o banco de dados.");
+            }
+        }
+
+        function renderizarPaginaPedidos() {
+            const container = document.getElementById('ordersCardsContainer');
+            container.innerHTML = '';
+
+            const buscaCliente = document.getElementById('filterClient').value.trim().toLowerCase();
+            const buscaData = document.getElementById('filterDate').value;
+
+            let pedidosFiltrados = todosPedidosBanco;
+
+            // Filtro de Data (protegido caso o banco mande null)
+            if (buscaData) {
+                pedidosFiltrados = pedidosFiltrados.filter(p => p.data_emissao === buscaData);
+            }
+            
+            if (buscaCliente) {
+                pedidosFiltrados = pedidosFiltrados.filter(p => p.cliente && p.cliente.toLowerCase().includes(buscaCliente));
+            }
+
+            if (pedidosFiltrados.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 border border-slate-800 border-dashed rounded-xl bg-slate-900/30">
+                        <i class="fa-solid fa-folder-open text-slate-650 text-3xl mb-3 block"></i>
+                        <span class="text-xs text-slate-500 font-medium">Nenhum pedido localizado no banco de dados. Tente limpar os filtros.</span>
+                    </div>
+                `;
+                return;
+            }
+
+            // Agrupa por data (Se for nulo, joga para "Data Não Definida")
+            let agrupados = {};
+            pedidosFiltrados.forEach(p => {
+                const dataStr = p.data_emissao || "Data Não Definida";
+                if (!agrupados[dataStr]) agrupados[dataStr] = [];
+                agrupados[dataStr].push(p);
+            });
+
+            const datasOrdenadas = Object.keys(agrupados).sort((a, b) => b.localeCompare(a));
+
+            datasOrdenadas.forEach(data => {
+                const labelData = data === "Data Não Definida" ? data : formatarDataBr(data);
+                
+                let dataHtml = `
+                    <div class="flex flex-col gap-4">
+                        <div class="flex items-center gap-2 border-b border-slate-800 pb-2 mt-4">
+                            <span class="bg-blue-600/10 text-blue-400 p-1.5 rounded-lg text-xs"><i class="fa-solid fa-calendar"></i></span>
+                            <h3 class="text-xs font-black text-slate-300 uppercase tracking-wider">${labelData}</h3>
+                        </div>
+                `;
+
+                agrupados[data].forEach(p => {
+                    let badgeClass = "text-blue-400 bg-blue-500/10 border-blue-500/20";
+                    if (p.prioridade === "Baixa") badgeClass = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+                    if (p.prioridade === "Alta") badgeClass = "text-red-400 bg-red-500/10 border-red-500/20";
+
+                    let itensTabelaRowsHtml = '';
+                    if (p.itens && p.itens.length > 0) {
+                        p.itens.forEach(item => {
+                            itensTabelaRowsHtml += `
+                                <tr class="border-b border-slate-800/60 text-slate-300">
+                                    <td class="py-2 px-3 text-center font-bold text-slate-400">${item.quant}</td>
+                                    <td class="py-2 px-3">${item.descricao || "Item sem descrição"}</td>
+                                    <td class="py-2 px-3 text-right font-mono text-xs">${formatarMoeda(item.valor || 0)}</td>
+                                    <td class="py-2 px-3 text-right font-mono text-xs font-semibold text-slate-100">${formatarMoeda(item.quant * item.valor)}</td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        itensTabelaRowsHtml = `<tr><td colspan="4" class="py-3 px-3 text-center text-xs italic text-slate-600">Sem itens detalhados</td></tr>`;
+                    }
+
+                    const cardHtml = `
+                        <div class="border border-slate-800 bg-slate-950/45 p-4 rounded-xl flex flex-col gap-4 hover:border-slate-700 transition-all">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                                <div class="flex items-center gap-2.5 flex-wrap">
+                                    <span class="text-[10px] text-slate-500 font-mono">#${(p.pedido_id || "").split('-')[1] || p.pedido_id}</span>
+                                    <span class="text-xs font-bold text-slate-100 bg-slate-800 border border-slate-700 px-2.5 py-1 rounded flex items-center gap-1.5 font-mono">
+                                        <i class="fa-solid fa-clock text-blue-400 text-xs"></i> ${p.hora || p.horario || "Sem Horário"}
+                                    </span>
+                                    <strong class="text-sm text-slate-200 tracking-tight">${p.cliente || "Cliente Indefinido"}</strong>
+                                    <span class="text-[9px] uppercase font-bold border rounded px-1.5 py-0.5 ${badgeClass}">${p.prioridade || "Media"}</span>
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto w-full border border-slate-850 rounded-lg bg-slate-900/40 custom-scrollbar">
+                                <table class="w-full text-left border-collapse text-xs">
+                                    <thead>
+                                        <tr class="text-[10px] font-bold text-slate-500 border-b border-slate-800 bg-slate-900/80 uppercase tracking-wider">
+                                            <th class="py-2 px-3 w-16 text-center">Quant.</th>
+                                            <th class="py-2 px-3">Descrição do Item</th>
+                                            <th class="py-2 px-3 w-32 text-right">Valor Unitário</th>
+                                            <th class="py-2 px-3 w-32 text-right">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>${itensTabelaRowsHtml}</tbody>
+                                </table>
+                            </div>
+                            <div class="flex justify-end items-center text-xs border-t border-slate-800/80 pt-3">
+                                <div class="text-right">
+                                    <span class="text-[10px] text-slate-500 block uppercase font-bold">Valor Total do Pedido</span>
+                                    <span class="text-sm font-bold text-emerald-400">${formatarMoeda(parseFloat(p.valor_total) || 0)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    dataHtml += cardHtml;
+                });
+                dataHtml += `</div>`;
+                container.insertAdjacentHTML('beforeend', dataHtml);
+            });
+        }
+
+        /* ----- Lógica de Lançamento ----- */
         function calcularHoraFim() {
             const inicio = document.getElementById('horaInicio').value;
             if (inicio) {
@@ -273,6 +465,11 @@
                     document.getElementById('horaInicio').value = "";
                     document.getElementById('horaFim').value = "";
                     renderizarTabela();
+                    
+                    // Adiciona o novo cliente à lista de autocomplete automaticamente
+                    if(!listaClientesBanco.includes(cliente)) {
+                        listaClientesBanco.push(cliente);
+                    }
                 } else {
                     showToast("<i class='fa-solid fa-xmark text-red-500'></i>", "Erro retornado pela API.");
                 }
@@ -280,103 +477,6 @@
                 showToast("<i class='fa-solid fa-xmark text-red-500'></i>", "Erro ao conectar com o Servidor (Backend).");
             }
         }
-
-        /* ----- Lógica do Painel Operacional da Grade ----- */
-        function abrirGerenciadorGrade() {
-            // Usa a data atual do input principal como data inicial do gerenciador
-            dataGerenciadorAtual = document.getElementById('orderDate').value;
-            atualizarVisorDataGerenciador();
-            
-            const modal = document.getElementById('gridManagerModal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.querySelector('.max-w-2xl').classList.remove('scale-95');
-                modal.querySelector('.max-w-2xl').classList.add('scale-100');
-            }, 10);
-
-            carregarPedidosDoDia(dataGerenciadorAtual);
-        }
-
-        function fecharGerenciadorGrade() {
-            const modal = document.getElementById('gridManagerModal');
-            modal.querySelector('.max-w-2xl').classList.remove('scale-100');
-            modal.querySelector('.max-w-2xl').classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 150);
-        }
-
-        function formatarDataBr(dataStr) {
-            if (!dataStr) return "";
-            const partes = dataStr.split('-');
-            return `${partes[2]}/${partes[1]}/${partes[0]}`;
-        }
-
-        function atualizarVisorDataGerenciador() {
-            document.getElementById('managerDateDisplay').innerText = formatarDataBr(dataGerenciadorAtual);
-        }
-
-        function navegarDiaGerenciador(offset) {
-            const dataAtualObj = new Date(dataGerenciadorAtual + "T00:00:00");
-            dataAtualObj.setDate(dataAtualObj.getDate() + offset);
-            dataGerenciadorAtual = dataAtualObj.toISOString().split('T')[0];
-            
-            atualizarVisorDataGerenciador();
-            carregarPedidosDoDia(dataGerenciadorAtual);
-        }
-
-        function navegarDiaHojeGerenciador() {
-            dataGerenciadorAtual = new Date().toISOString().split('T')[0];
-            atualizarVisorDataGerenciador();
-            carregarPedidosDoDia(dataGerenciadorAtual);
-        }
-
-        // Busca na API os pedidos de uma data específica
-        async function carregarPedidosDoDia(dataStr) {
-            const container = document.getElementById('managerSlotsContainer');
-            container.innerHTML = `<div class="text-center py-8 text-slate-500 text-xs italic"><i class="fa-solid fa-spinner fa-spin"></i> Buscando agendamentos...</div>`;
-            
-            try {
-                // Reaproveitamos o endpoint de horários ocupados para pegar os horários daquele dia
-                // Em um cenário real mais completo, você criaria uma rota na API que retorna o objeto do pedido completo (Horário, Cliente, Prioridade)
-                const response = await fetch(`http://localhost:8001/api/horarios-ocupados?data=${dataStr}`);
-                if (!response.ok) throw new Error("Erro na API");
-                const dataRes = await response.json();
-                const horarios = dataRes.ocupados || [];
-
-                if (horarios.length === 0) {
-                    container.innerHTML = `
-                        <div class="border border-slate-850 bg-slate-900/30 p-6 rounded-xl flex justify-center items-center text-slate-500 border-dashed text-xs">
-                            Nenhum pedido agendado para este dia.
-                        </div>
-                    `;
-                    return;
-                }
-
-                container.innerHTML = '';
-                // Como a API atual só retorna a string do horário, vamos renderizar apenas os horários ocupados.
-                // Se a API retornasse o cliente, poderíamos mostrar aqui também.
-                horarios.forEach(horario => {
-                    const itemHtml = `
-                        <div class="border border-slate-750 bg-slate-950 p-4 rounded-xl flex flex-col md:flex-row justify-between md:items-center gap-3">
-                            <div class="flex items-center gap-3">
-                                <span class="bg-blue-600/20 text-blue-400 p-2 rounded-lg text-xs"><i class="fa-solid fa-clock"></i></span>
-                                <span class="text-sm font-bold text-slate-200">${horario}</span>
-                            </div>
-                            <div class="flex items-center gap-1.5 justify-end">
-                                <span class="text-xs text-slate-500 italic px-2">Alocado no banco de dados</span>
-                            </div>
-                        </div>
-                    `;
-                    container.insertAdjacentHTML('beforeend', itemHtml);
-                });
-
-            } catch (error) {
-                container.innerHTML = `<div class="text-center py-8 text-red-500 text-xs">Erro ao carregar dados do dia.</div>`;
-                console.error("Erro ao buscar dados do gerenciador:", error);
-            }
-        }
-
 
         /* ----- Funções Auxiliares (Tabela, Calculos e UI) ----- */
         function renderizarTabela() {
@@ -386,53 +486,39 @@
                 const tr = document.createElement('tr');
                 tr.className = "group border-b border-slate-800/50 hover:bg-slate-900/30 transition-all";
                 tr.innerHTML = `
-                    <td class="py-3 px-3 text-center">
-                        <input type="number" min="1" value="${item.quant}" onchange="alterarItem(${index}, 'quant', this.value)"
-                            class="w-16 bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-center text-slate-200 focus:ring-1 focus:ring-blue-500 font-bold">
-                    </td>
-                    <td class="py-3 px-3">
-                        <input type="text" value="${item.descricao}" placeholder="Descrição do item..." oninput="alterarItem(${index}, 'descricao', this.value)"
-                            class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-slate-200 focus:ring-1 focus:ring-blue-500">
-                    </td>
-                    <td class="py-3 px-3">
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 text-xs font-bold">R$</span>
-                            <input type="number" min="0" step="0.01" value="${item.valor.toFixed(2)}" onchange="alterarItem(${index}, 'valor', this.value)"
-                                class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-slate-200 focus:ring-1 focus:ring-blue-500 font-mono">
-                        </div>
-                    </td>
-                    <td class="py-3 px-3 text-center">
-                        <button onclick="removerLinha(${index})" class="text-slate-600 hover:text-red-400 p-2 rounded-lg hover:bg-red-500/10 transition-all" title="Remover item">
-                            <i class="fa-solid fa-trash-can text-xs"></i>
-                        </button>
-                    </td>
+                    <td class="py-3 px-3 text-center"><input type="number" min="1" value="${item.quant}" onchange="alterarItem(${index}, 'quant', this.value)" class="w-16 bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-center text-slate-200 focus:ring-1 focus:ring-blue-500 font-bold"></td>
+                    <td class="py-3 px-3"><input type="text" value="${item.descricao}" placeholder="Descrição do item..." oninput="alterarItem(${index}, 'descricao', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-slate-200 focus:ring-1 focus:ring-blue-500"></td>
+                    <td class="py-3 px-3"><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 text-xs font-bold">R$</span><input type="number" min="0" step="0.01" value="${item.valor.toFixed(2)}" onchange="alterarItem(${index}, 'valor', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-slate-200 focus:ring-1 focus:ring-blue-500 font-mono"></div></td>
+                    <td class="py-3 px-3 text-center"><button onclick="removerLinha(${index})" class="text-slate-600 hover:text-red-400 p-2 rounded-lg hover:bg-red-500/10 transition-all" title="Remover item"><i class="fa-solid fa-trash-can text-xs"></i></button></td>
                 `;
                 tbody.appendChild(tr);
             });
             calcularTotais();
         }
 
-        function adicionarLinha() {
-            itens.push({ id: Date.now(), quant: 1, descricao: "", valor: 0.00 });
-            renderizarTabela();
-        }
-
-        function removerLinha(index) {
-            itens.splice(index, 1);
-            renderizarTabela();
-        }
-
+        function adicionarLinha() { itens.push({ id: Date.now(), quant: 1, descricao: "", valor: 0.00 }); renderizarTabela(); }
+        function removerLinha(index) { itens.splice(index, 1); renderizarTabela(); }
         function alterarItem(index, campo, valor) {
             if (campo === 'quant') itens[index].quant = parseInt(valor) || 0;
             else if (campo === 'valor') itens[index].valor = parseFloat(valor) || 0.00;
             else if (campo === 'descricao') itens[index].descricao = valor;
             calcularTotais();
         }
-
         function calcularTotais() {
             let total = 0;
             itens.forEach(item => total += item.quant * item.valor);
-            document.getElementById('totalDisplay').innerText = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('totalDisplay').innerText = formatarMoeda(total);
+        }
+
+        function formatarDataBr(dataStr) {
+            if (!dataStr) return "";
+            const partes = dataStr.split('-');
+            if(partes.length < 3) return dataStr;
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
+        function formatarMoeda(valor) {
+            return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
 
         function abrirModal(titulo, message) {
@@ -440,14 +526,13 @@
             document.getElementById('modalMessage').innerText = message;
             document.getElementById('feedbackModal').classList.remove('hidden');
         }
-
         function fecharModal() { document.getElementById('feedbackModal').classList.add('hidden'); }
-
         function showToast(iconHtml, message) {
             const toast = document.getElementById('toast');
             document.getElementById('toastIcon').innerHTML = iconHtml;
             document.getElementById('toastMessage').innerText = message;
             toast.classList.remove('hidden');
+            setTimeout(() => { toast.classList.add('hidden'); }, 3000);
         }
     </script>
 </body>
