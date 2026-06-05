@@ -691,14 +691,14 @@ function fecharModalProducao() {
     }
 
     const payload = {
-        pedido_id: "MET-" + Math.floor(1000 + Math.random() * 9000),
-        cliente: cliente,
-        data: data,
-        horario: horario,
-        prioridade: prioridade,
-        total: itens.reduce((sum, item) => sum + (item.quant * item.valor), 0),
-        itens_json: JSON.stringify(itens)
-    };
+    pedido_id: "MET-" + Math.floor(1000 + Math.random() * 9000),
+    cliente: document.getElementById('clientName').value.trim(),
+    data: document.getElementById('orderDate').value,
+    horario: document.getElementById('formHorario').value,     // Certifique-se deste ID
+    prioridade: document.getElementById('formPrioridade').value, // Certifique-se deste ID
+    total: itens.reduce((sum, item) => sum + (item.quant * item.valor), 0),
+    itens_json: JSON.stringify(itens)
+};
 
     console.log("Enviando Payload:", payload);
 
