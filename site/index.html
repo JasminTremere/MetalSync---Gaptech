@@ -242,31 +242,26 @@
                 </button>
             </div>
 
-            <div class="flex flex-col gap-4">
-                <!-- Grade de Slots -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="flex flex-col gap-2">
-                    <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                        <i class="fa-solid fa-clock text-blue-400"></i> Grade de Horários Disponíveis *
-                    </label>
-                    <div id="slotsContainer" class="flex flex-col gap-2 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar">
-                        <!-- Gerado via JS -->
-                    </div>
+                    <label class="text-xs font-semibold text-slate-300">Horário *</label>
+                    <select id="formHorario" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs p-2.5 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none">
+                        <option value="07:00 às 09:00">07:00 às 09:00</option>
+                        <option value="09:00 às 11:00">09:00 às 11:00</option>
+                        <option value="11:00 às 13:00">11:00 às 13:00</option>
+                        <option value="13:00 às 15:00">13:00 às 15:00</option>
+                        <option value="15:00 às 17:00">15:00 às 17:00</option>
+                        <option value="17:00 às 19:00">17:00 às 19:00</option>
+                    </select>
                 </div>
 
-                <!-- Prioridade -->
                 <div class="flex flex-col gap-2">
-                    <label class="text-xs font-semibold text-slate-300">Prioridade de Produção *</label>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button onclick="setPrioridade('Baixa')" id="btnPrioridadeBaixa" class="py-2 px-3 rounded-lg border border-slate-800 bg-slate-950 text-xs font-semibold transition-all hover:border-slate-700 text-slate-400">
-                            🟢 Baixa
-                        </button>
-                        <button onclick="setPrioridade('Media')" id="btnPrioridadeMedia" class="py-2 px-3 rounded-lg border border-blue-500/50 bg-blue-600/10 text-xs font-semibold transition-all text-blue-400">
-                            🟡 Média
-                        </button>
-                        <button onclick="setPrioridade('Alta')" id="btnPrioridadeAlta" class="py-2 px-3 rounded-lg border border-slate-800 bg-slate-950 text-xs font-semibold transition-all hover:border-slate-700 text-slate-400">
-                            🔴 Alta (Urgente)
-                        </button>
-                    </div>
+                    <label class="text-xs font-semibold text-slate-300">Prioridade *</label>
+                    <select id="formPrioridade" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs p-2.5 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none">
+                        <option value="Baixa">Baixa</option>
+                        <option value="Media" selected>Media</option>
+                        <option value="Alta">Alta</option>
+                    </select>
                 </div>
             </div>
 
@@ -412,9 +407,10 @@
 
         // Estado do Planejamento
         let producao = {
-            horario: "11:00 às 13:00",
+            horario: "",
             prioridade: "Media"
         };
+    
 
         const gradeSlots = [
             "07:00 às 09:00",
@@ -595,31 +591,22 @@
             }
         }
 
-        // POPUP LANÇAMENTO: Abre e desenha o modal para alocar o novo pedido
         function abrirModalProducao() {
-            const data = document.getElementById('orderDate').value;
-            document.getElementById('modalSubtitle').innerText = `Selecione um horário para o dia ${formatarDataBr(data)}`;
-            setPrioridade(producao.prioridade);
+    const modal = document.getElementById('productionModal');
+    if (!modal) {
+        console.error("ERRO: Elemento 'productionModal' não encontrado no HTML.");
+        return;
+    }
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    console.log("Modal aberto.");
+}
 
-            renderizarGradeHorarios();
-
-            const modal = document.getElementById('productionModal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.querySelector('.max-w-lg').classList.remove('scale-95');
-                modal.querySelector('.max-w-lg').classList.add('scale-100');
-            }, 10);
-        }
-
-        function fecharModalProducao() {
-            const modal = document.getElementById('productionModal');
-            modal.querySelector('.max-w-lg').classList.remove('scale-100');
-            modal.querySelector('.max-w-lg').classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 150);
-        }
-
+function fecharModalProducao() {
+    const modal = document.getElementById('productionModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
         // Renderiza a lista de slots disponíveis no modal de alocação de produção
         function renderizarGradeHorarios() {
             const data = document.getElementById('orderDate').value;
@@ -691,31 +678,27 @@
 
         // CONFIRMAÇÃO DO PEDIDO (Gera o ID automaticamente, valida o cliente APENAS AQUI e clona a tabela de itens)
         async function salvarEInserirPedido() {
-    const data = document.getElementById('orderDate').value;
     const cliente = document.getElementById('clientName').value.trim();
+    const data = document.getElementById('orderDate').value;
+    
+    // Captura direta dos valores dos selects
+    const horario = document.getElementById('formHorario').value;
+    const prioridade = document.getElementById('formPrioridade').value;
 
-    // Validações
     if (!cliente) {
-        showToast("<i class='fa-solid fa-triangle-exclamation'></i>", "Informe o nome do cliente.");
-        return;
-    }
-    if (!producao.horario) {
-        showToast("<i class='fa-solid fa-clock'></i>", "Selecione um horário no popup.");
+        alert("Preencha o nome do cliente.");
         return;
     }
 
-    let totalGeral = itens.reduce((sum, item) => sum + (item.quant * item.valor), 0);
-
-    // O payload agora captura explicitamente os valores do objeto 'producao'
     const payload = {
-    pedido_id: "MET-" + Math.floor(1000 + Math.random() * 9000),
-    cliente: cliente,
-    data: data,
-    horario: producao.horario,      // Tem que ser exatamente 'horario'
-    prioridade: producao.prioridade, // Tem que ser exatamente 'prioridade'
-    total: totalGeral,
-    itens_json: JSON.stringify(itens) 
-};
+        pedido_id: "MET-" + Math.floor(1000 + Math.random() * 9000),
+        cliente: cliente,
+        data: data,
+        horario: horario,
+        prioridade: prioridade,
+        total: itens.reduce((sum, item) => sum + (item.quant * item.valor), 0),
+        itens_json: JSON.stringify(itens)
+    };
 
     console.log("Enviando Payload:", payload);
 
@@ -727,23 +710,17 @@
         });
 
         if (response.ok) {
-            // Atualiza a memória local para que a tela de listagem funcione
-            if (!agendamentosExistentes[data]) agendamentosExistentes[data] = {};
-            agendamentosExistentes[data][producao.horario] = payload;
-            
+            alert("Sucesso! Pedido inserido.");
             fecharModalProducao();
-            abrirModal("Lançamento Efetuado!", "Pedido e horário salvos com sucesso.");
-            
-            // Limpa o formulário
-            itens = [{ id: Date.now(), quant: 1, descricao: "", valor: 0.00 }];
+            // Reseta para novo lançamento
             document.getElementById('clientName').value = "";
+            itens = [{ id: Date.now(), quant: 1, descricao: "", valor: 0.00 }];
             renderizarTabela();
         } else {
-            showToast("<i class='fa-solid fa-xmark'></i>", "Erro ao salvar no banco.");
+            alert("Erro no servidor.");
         }
     } catch (error) {
-        console.error(error);
-        showToast("<i class='fa-solid fa-plug-circle-xmark'></i>", "Falha na conexão com o servidor.");
+        console.error("Falha:", error);
     }
 }
         // MODAL GERENCIADOR DE GRADE (CONTROLE DE ATRASOS)

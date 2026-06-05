@@ -42,31 +42,36 @@ def listar_pedidos():
 
 @app.post("/api/novo-pedido")
 def criar_pedido(payload: dict):
-    # Print para debug - Olhe o terminal do seu VS Code/CMD após clicar no botão
-    print("PAYLOAD RECEBIDO PELO FASTAPI:", payload)
+    print(f"Dados recebidos no Python: {payload}")
     
     db = conectar_db()
     try:
         with db.cursor() as cursor:
-            # Usando .get(chave, valor_padrao) para evitar NULL se o campo não vier
-            pedido_id = payload.get('pedido_id')
-            cliente = payload.get('cliente')
-            data = payload.get('data')
-            horario = payload.get('horario', 'Não definido') # Padrão se vier nulo
-            prioridade = payload.get('prioridade', 'Media')  # Padrão se vier nulo
-            total = payload.get('total', 0)
-            itens_json = payload.get('itens_json')
-
+            # 1. Definimos o SQL com 8 posições (%s)
             sql = """
                 INSERT INTO db_pedido_pedidos 
                 (pedido_id, cliente, data_emissao, horario, prioridade, valor_total, itens_json, status)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, 'criado')
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """
-            cursor.execute(sql, (pedido_id, cliente, data, horario, prioridade, total, itens_json))
+            
+            # 2. Criamos uma tupla com EXATAMENTE 8 valores
+            valores = (
+                payload.get('pedido_id'), 
+                payload.get('cliente'), 
+                payload.get('data'), 
+                payload.get('horario'), 
+                payload.get('prioridade'), 
+                payload.get('total'), 
+                payload.get('itens_json'),
+                'criado' # O 8º valor é o status fixo
+            )
+            
+            cursor.execute(sql, valores)
             db.commit()
             return {"status": "sucesso"}
+            
     except Exception as e:
-        print("ERRO DETALHADO:", e)
+        print(f"ERRO SQL: {e}")
         return {"status": "erro", "msg": str(e)}, 500
     finally:
         db.close()
