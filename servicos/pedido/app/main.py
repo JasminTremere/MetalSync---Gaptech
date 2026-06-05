@@ -2,7 +2,6 @@ import json
 import threading
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-# Certifique-se de que estes imports existem no seu arquivo original
 from consumer import iniciar_consumer, conectar_db
 
 app = FastAPI(title="MetalSync - Serviço de Pedidos")
@@ -23,27 +22,76 @@ def startup():
 def health():
     return {"status": "ok", "servico": "pedido"}
 
-# --- ROTA LISTAR PEDIDOS ---
+# --- 1. ROTA PARA INSERIR NOVO PEDIDO ---
+@app.post("/api/novo-pedido")
+def criar_pedido(payload: dict):
+    db = conectar_db()
+    try:
+        with db.cursor() as cursor:
+            # Inserindo na coluna VARCHAR 'horario'
+            sql = """
+                INSERT INTO db_pedido_pedidos 
+                (pedido_id, cliente, data_emissao, horario, prioridade, valor_total, itens_json) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(sql, (
+                payload.get('pedido_id'),
+                payload.get('cliente'),
+                payload.get('data'),
+                payload.get('horario'),
+                payload.get('prioridade'),
+                payload.get('total'),
+                payload.get('itens_json')
+            ))
+            db.commit()
+            return {"status": "sucesso"}
+    except Exception as e:
+        db.rollback()
+        print(f"Erro ao inserir: {e}")
+        return {"status": "erro", "msg": str(e)}, 500
+    finally:
+        db.close()
+
+# --- 2. ROTA LISTAR PEDIDOS ---
 @app.get("/api/pedidos")
 def listar_pedidos():
     db = conectar_db()
     try:
         with db.cursor() as cursor:
-            # Padronizado para 'hora'
-            sql = "SELECT pedido_id, data_emissao, cliente, hora, prioridade, valor_total, itens_json FROM db_pedido_pedidos ORDER BY data_emissao DESC"
+            # Buscando da coluna VARCHAR 'horario'
+            sql = "SELECT pedido_id, data_emissao, cliente, horario, prioridade, valor_total, itens_json FROM db_pedido_pedidos ORDER BY data_emissao DESC"
             cursor.execute(sql)
             resultados = cursor.fetchall()
 
             for r in resultados:
-                if r['data_emissao']: r['data_emissao'] = str(r['data_emissao'])
+                if r['data_emissao']: 
+                    r['data_emissao'] = str(r['data_emissao'])
                 r['itens'] = json.loads(r['itens_json']) if r['itens_json'] else []
             return {"pedidos": resultados}
     except Exception as e:
+        print(f"Erro ao listar pedidos: {e}")
         return {"erro": str(e)}, 500
     finally:
         db.close()
 
-# --- ROTA LISTAR CLIENTES ---
+# --- 3. ROTA HORÁRIOS OCUPADOS (Painel Operacional) ---
+@app.get("/api/horarios-ocupados")
+def get_horarios_ocupados(data: str):
+    db = conectar_db()
+    try:
+        with db.cursor() as cursor:
+            # Buscando da coluna VARCHAR 'horario'
+            sql = "SELECT horario FROM db_pedido_pedidos WHERE data_emissao = %s"
+            cursor.execute(sql, (data,))
+            resultados = cursor.fetchall()
+            return {"ocupados": [r['horario'] for r in resultados if r['horario']]}
+    except Exception as e:
+        print(f"Erro ao listar horários: {e}")
+        return {"erro": str(e)}, 500
+    finally:
+        db.close()
+
+# --- 4. ROTA LISTAR CLIENTES ---
 @app.get("/api/clientes")
 def listar_clientes():
     db = conectar_db()
@@ -57,23 +105,7 @@ def listar_clientes():
     finally:
         db.close()
 
-# --- ROTA HORÁRIOS OCUPADOS (Para o Painel Operacional) ---
-@app.get("/api/horarios-ocupados")
-def get_horarios_ocupados(data: str):
-    db = conectar_db()
-    try:
-        with db.cursor() as cursor:
-            # BUSCANDO NA COLUNA 'hora' (Padronizada)
-            sql = "SELECT hora FROM db_pedido_pedidos WHERE data_emissao = %s"
-            cursor.execute(sql, (data,))
-            resultados = cursor.fetchall()
-            return {"ocupados": [r['hora'] for r in resultados if r['hora']]}
-    except Exception as e:
-        return {"erro": str(e)}, 500
-    finally:
-        db.close()
-
-# --- ROTA METRICAS ---
+# --- 5. ROTA METRICAS ---
 @app.get("/metrics")
 def metrics():
     db = conectar_db()

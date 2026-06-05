@@ -54,7 +54,7 @@
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-user text-xs"></i></span>
                         <input type="text" id="clientName" autocomplete="off" onfocus="mostrarDropdownClientes()" oninput="filtrarDropdownClientes()" placeholder="Ex: Metalúrgica..." class="w-full bg-slate-900 border border-slate-800 rounded-lg py-2.5 pl-9 pr-3 text-sm text-slate-100 focus:ring-2 focus:ring-blue-500/50">
                     </div>
-                    <ul id="Clientes" class="hidden absolute top-[100%] left-0 w-full z-50 bg-slate-800 border border-slate-700 rounded-lg mt-1 max-h-40 overflow-y-auto shadow-xl custom-scrollbar">
+                    <ul id="dropdownClientes" class="hidden absolute top-[100%] left-0 w-full z-50 bg-slate-800 border border-slate-700 rounded-lg mt-1 max-h-40 overflow-y-auto shadow-xl custom-scrollbar">
                     </ul>
                 </div>
 
@@ -132,7 +132,6 @@
 
     <main id="viewOrdersList" class="hidden flex-grow max-w-5xl w-full mx-auto p-4 md:p-6 flex flex-col gap-6">
         <div class="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-md">
-            
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4 mb-6">
                 <div>
                     <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
@@ -187,51 +186,49 @@
         <span id="toastMessage">Informativo</span>
     </div>
 
-    <!-- MODAL: GERENCIADOR DE GRADE -->
-<div id="gridManagerModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all">
-    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-2xl w-full shadow-2xl flex flex-col gap-4">
-        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-            <h3 class="text-base font-bold text-white">Painel Operacional da Grade</h3>
-            <button onclick="fecharGerenciadorGrade()" class="text-slate-500 hover:text-slate-300"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div id="managerSlotsContainer" class="flex flex-col gap-3 max-h-[300px] overflow-y-auto custom-scrollbar">
-            <!-- Os horários aparecerão aqui -->
+    <div id="gridManagerModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-2xl w-full shadow-2xl flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white">Painel Operacional da Grade</h3>
+                <button onclick="fecharGerenciadorGrade()" class="text-slate-500 hover:text-slate-300 transition-colors"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div class="text-xs bg-slate-950 px-3.5 py-2.5 rounded-xl border border-slate-850 text-slate-400 flex justify-between items-center">
+                <span>Fila Operacional para o dia:</span>
+                <strong class="text-slate-200 font-mono text-sm" id="managerDateDisplay"></strong>
+            </div>
+
+            <div id="managerSlotsContainer" class="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                </div>
         </div>
     </div>
-</div>
 
     <script>
         let itens = [];
         let todosPedidosBanco = []; 
-        let listaClientesBanco = []; // Guarda os clientes para o autocompletar
+        let listaClientesBanco = []; 
 
         window.onload = function() {
             const hoje = new Date().toISOString().split('T')[0];
             document.getElementById('orderDate').value = hoje;
             itens = [{ id: Date.now(), quant: 1, descricao: "", valor: 0.00 }];
             renderizarTabela();
-            
-            // Carrega os clientes do banco para o Autocompletar
             carregarOpcoesClientes();
         }
 
-        /* ----- LÓGICA DO AUTOCOMPLETAR DE CLIENTES (CUSTOMIZADO) ----- */
+        /* ----- LÓGICA DO AUTOCOMPLETAR DE CLIENTES ----- */
         async function carregarOpcoesClientes() {
             try {
                 const response = await fetch('http://localhost:8001/api/clientes');
                 if (!response.ok) return;
                 const data = await response.json();
-                if (data.clientes) {
-                    listaClientesBanco = data.clientes;
-                }
+                if (data.clientes) listaClientesBanco = data.clientes;
             } catch (error) {
                 console.error("Erro ao carregar clientes:", error);
             }
         }
 
-        function mostrarDropdownClientes() {
-            filtrarDropdownClientes(); 
-        }
+        function mostrarDropdownClientes() { filtrarDropdownClientes(); }
 
         function filtrarDropdownClientes() {
             const inputVal = document.getElementById('clientName').value.toLowerCase();
@@ -249,40 +246,92 @@
                 const li = document.createElement('li');
                 li.className = "px-4 py-2.5 text-sm text-slate-300 hover:bg-blue-600 hover:text-white cursor-pointer transition-colors border-b border-slate-700/50 last:border-0";
                 li.innerText = c;
-                // Usamos mousedown em vez de click para agir antes do input perder o foco
                 li.onmousedown = () => { 
                     document.getElementById('clientName').value = c;
                     dropdown.classList.add('hidden');
                 };
                 dropdown.appendChild(li);
             });
-
             dropdown.classList.remove('hidden');
         }
 
-        // Fecha o dropdown de clientes se clicar fora
         document.addEventListener('click', function(e) {
             if (e.target.id !== 'clientName') {
-                document.getElementById('dropdownClientes').classList.add('hidden');
+                const drop = document.getElementById('dropdownClientes');
+                if(drop) drop.classList.add('hidden');
             }
         });
 
 
-        /* ----- Lógica de Telas e Listagem ----- */
+        /* ----- LÓGICA DO GERENCIADOR DE GRADE (PAINEL OPERACIONAL) ----- */
+        async function abrirGerenciadorGrade() {
+            const modal = document.getElementById('gridManagerModal');
+            modal.classList.remove('hidden');
+            
+            const dataSelecionada = document.getElementById('orderDate').value;
+            document.getElementById('managerDateDisplay').innerText = formatarDataBr(dataSelecionada);
+            
+            await carregarPedidosDoDia(dataSelecionada);
+        }
+
+        function fecharGerenciadorGrade() {
+            document.getElementById('gridManagerModal').classList.add('hidden');
+        }
+
+        async function carregarPedidosDoDia(dataStr) {
+            const container = document.getElementById('managerSlotsContainer');
+            container.innerHTML = `<div class="text-center py-8 text-slate-500 text-xs italic"><i class="fa-solid fa-spinner fa-spin"></i> Buscando agendamentos...</div>`;
+            
+            if (!dataStr) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-500 text-xs">Selecione uma data na tela de lançamento primeiro.</div>`;
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:8001/api/horarios-ocupados?data=${dataStr}`);
+                if (!response.ok) throw new Error("Erro na API");
+                
+                const dataRes = await response.json();
+                const horarios = dataRes.ocupados || [];
+
+                if (horarios.length === 0) {
+                    container.innerHTML = `
+                        <div class="border border-slate-850 bg-slate-900/30 p-6 rounded-xl flex justify-center items-center text-slate-500 border-dashed text-xs">
+                            Nenhum pedido agendado para o dia ${formatarDataBr(dataStr)}.
+                        </div>`;
+                    return;
+                }
+
+                container.innerHTML = '';
+                horarios.sort(); // Ordena os horários do menor para o maior
+                
+                horarios.forEach(horario => {
+                    const itemHtml = `
+                        <div class="border border-slate-750 bg-slate-950 p-3 rounded-xl flex items-center gap-3">
+                            <span class="bg-blue-600/20 text-blue-400 p-2 rounded-lg text-xs"><i class="fa-solid fa-clock"></i></span>
+                            <span class="text-sm font-bold text-slate-200">${horario}</span>
+                            <span class="ml-auto text-[10px] text-slate-500 uppercase font-bold bg-slate-900 px-2.5 py-1 rounded border border-slate-800">Alocado</span>
+                        </div>`;
+                    container.insertAdjacentHTML('beforeend', itemHtml);
+                });
+            } catch (error) {
+                container.innerHTML = `<div class="text-center py-8 text-red-500 text-xs">Erro ao carregar dados do banco.</div>`;
+                console.error(error);
+            }
+        }
+
+
+        /* ----- Lógica de Telas e Listagem de Pedidos ----- */
         async function mostrarPaginaPedidos() {
             document.getElementById('viewLauncher').classList.add('hidden');
             document.getElementById('viewOrdersList').classList.remove('hidden');
-            
-            // Limpa os filtros ao abrir a tela para evitar sustos
             limparFiltrosPedidos(false);
-            
             await carregarPedidosDoBanco();
         }
 
         function mostrarPaginaLancamento() {
             document.getElementById('viewOrdersList').classList.add('hidden');
             document.getElementById('viewLauncher').classList.remove('hidden');
-            // Recarrega os clientes caso tenha criado um novo
             carregarOpcoesClientes();
         }
 
@@ -314,11 +363,9 @@
 
             let pedidosFiltrados = todosPedidosBanco;
 
-            // Filtro de Data (protegido caso o banco mande null)
             if (buscaData) {
                 pedidosFiltrados = pedidosFiltrados.filter(p => p.data_emissao === buscaData);
             }
-            
             if (buscaCliente) {
                 pedidosFiltrados = pedidosFiltrados.filter(p => p.cliente && p.cliente.toLowerCase().includes(buscaCliente));
             }
@@ -327,13 +374,12 @@
                 container.innerHTML = `
                     <div class="text-center py-10 border border-slate-800 border-dashed rounded-xl bg-slate-900/30">
                         <i class="fa-solid fa-folder-open text-slate-650 text-3xl mb-3 block"></i>
-                        <span class="text-xs text-slate-500 font-medium">Nenhum pedido localizado no banco de dados. Tente limpar os filtros.</span>
+                        <span class="text-xs text-slate-500 font-medium">Nenhum pedido localizado no banco de dados.</span>
                     </div>
                 `;
                 return;
             }
 
-            // Agrupa por data (Se for nulo, joga para "Data Não Definida")
             let agrupados = {};
             pedidosFiltrados.forEach(p => {
                 const dataStr = p.data_emissao || "Data Não Definida";
@@ -466,7 +512,6 @@
                     document.getElementById('horaFim').value = "";
                     renderizarTabela();
                     
-                    // Adiciona o novo cliente à lista de autocomplete automaticamente
                     if(!listaClientesBanco.includes(cliente)) {
                         listaClientesBanco.push(cliente);
                     }
@@ -478,7 +523,7 @@
             }
         }
 
-        /* ----- Funções Auxiliares (Tabela, Calculos e UI) ----- */
+        /* ----- Funções Auxiliares ----- */
         function renderizarTabela() {
             const tbody = document.getElementById('itensTableBody');
             tbody.innerHTML = '';
