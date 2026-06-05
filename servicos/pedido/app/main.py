@@ -1,5 +1,6 @@
 import json
 import threading
+import requests
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from consumer import iniciar_consumer, conectar_db
@@ -22,36 +23,40 @@ def startup():
 def health():
     return {"status": "ok", "servico": "pedido"}
 
-# --- 1. ROTA PARA INSERIR NOVO PEDIDO (Era isso que estava faltando e causando o erro 405) ---
+@import requests # Certifique-se de que está importado no topo
+
 @app.post("/api/novo-pedido")
 def criar_pedido(payload: dict):
     db = conectar_db()
     try:
+        # 1. Inserção no Banco
         with db.cursor() as cursor:
-            # Inserindo na coluna correta: 'horario'
-            sql = """
-                INSERT INTO db_pedido_pedidos 
-                (pedido_id, cliente, data_emissao, horario, prioridade, valor_total, itens_json) 
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """
+            sql = "INSERT INTO db_pedido_pedidos (pedido_id, cliente, data_emissao, horario, prioridade, valor_total, itens_json) VALUES (%s, %s, %s, %s, %s, %s, %s)"
             cursor.execute(sql, (
-                payload.get('pedido_id'),
-                payload.get('cliente'),
-                payload.get('data'),
-                payload.get('horario'),
-                payload.get('prioridade'),
-                payload.get('total'),
+                payload.get('pedido_id'), payload.get('cliente'), payload.get('data'),
+                payload.get('horario'), payload.get('prioridade'), payload.get('total'),
                 payload.get('itens_json')
             ))
             db.commit()
-            return {"status": "sucesso"}
+            print("Sucesso: Salvo no MySQL")
     except Exception as e:
-        db.rollback()
-        print(f"Erro ao inserir pedido: {e}")
+        print(f"Erro banco: {e}")
         return {"status": "erro", "msg": str(e)}, 500
     finally:
         db.close()
 
+    # 2. Disparo para o n8n (FORA do bloco do banco para não travar)
+    try:
+        # Tente usar o IP da máquina real se estiver no Docker, ou localhost se rodar local
+        # O timeout curto é para não travar a tela caso o n8n não responda
+        requests.post("http://localhost:5678/webhook/pedido", json=payload, timeout=3)
+        print("Sucesso: Enviado ao n8n")
+    except Exception as e:
+        print(f"Aviso: N8N não respondeu: {e}")
+
+    return {"status": "ok"}
+    
+     
 # --- 2. ROTA LISTAR PEDIDOS ---
 @app.get("/api/pedidos")
 def listar_pedidos():
