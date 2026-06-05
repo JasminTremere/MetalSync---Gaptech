@@ -42,31 +42,37 @@ def listar_pedidos():
 
 @app.post("/api/novo-pedido")
 def criar_pedido(payload: dict):
+    # Log para debug inicial
     print(f"Dados recebidos no Python: {payload}")
     
     db = conectar_db()
     try:
         with db.cursor() as cursor:
-            # 1. Definimos o SQL com 8 posições (%s)
+            # --- SEU CÓDIGO COMEÇA AQUI ---
+            horario = payload.get('horario')
+            prioridade = payload.get('prioridade')
+
+            # Debug para você ver o que está acontecendo antes de enviar ao banco
+            print(f"DEBUG: Indo para o SQL -> Horário: '{horario}', Prioridade: '{prioridade}'")
+
             sql = """
                 INSERT INTO db_pedido_pedidos 
                 (pedido_id, cliente, data_emissao, horario, prioridade, valor_total, itens_json, status)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, 'criado')
             """
             
-            # 2. Criamos uma tupla com EXATAMENTE 8 valores
-            valores = (
+            # Aqui passamos os 7 valores conforme o SQL acima
+            cursor.execute(sql, (
                 payload.get('pedido_id'), 
                 payload.get('cliente'), 
                 payload.get('data'), 
-                payload.get('horario'), 
-                payload.get('prioridade'), 
+                horario, 
+                prioridade, 
                 payload.get('total'), 
-                payload.get('itens_json'),
-                'criado' # O 8º valor é o status fixo
-            )
-            
-            cursor.execute(sql, valores)
+                payload.get('itens_json')
+            ))
+            # --- SEU CÓDIGO TERMINA AQUI ---
+
             db.commit()
             return {"status": "sucesso"}
             
@@ -76,6 +82,7 @@ def criar_pedido(payload: dict):
     finally:
         db.close()
 
+        
 # ROTA DE MÉTRICAS CORRIGIDA PARA O SEU BANCO REAL
 @app.get("/metrics")
 def metrics():
