@@ -4,32 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MetalSync - GapTech</title>
-    <!-- Tailwind CSS para design premium -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome para ícones modernos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Custom scrollbar */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #1e293b;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #475569;
-            border-radius: 3px;
-        }
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
 
-    <!-- Header Principal -->
     <header class="bg-slate-950 border-b border-slate-800 py-4 px-6 sticky top-0 z-10 shadow-lg">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
@@ -42,14 +28,11 @@
                 </div>
             </div>
             
-            <!-- Botões de Controle Minimalistas (Apenas Ícones) -->
             <div class="flex items-center gap-2">
-                <!-- Botão 1: Tela de Histórico de Pedidos Solicitados -->
-                <button onclick="mostrarPaginaPedidos()" class="bg-slate-850 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-750 p-2.5 rounded-xl transition-all active:scale-95" title="Visualizar Pedidos Solicitados">
+                <button onclick="mostrarPaginaPedidos()" class="bg-slate-850 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-750 p-2.5 rounded-xl transition-all" title="Visualizar Pedidos Solicitados">
                     <i class="fa-solid fa-list-check text-blue-400 text-base"></i>
                 </button>
-                
-                <!-- Botão 2: Grade de Horários -->
+                <!-- Botão do Painel Operacional da Grade reinserido -->
                 <button onclick="abrirGerenciadorGrade()" class="bg-slate-850 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-750 p-2.5 rounded-xl transition-all active:scale-95" title="Gerenciar Grade de Produção e Atrasos">
                     <i class="fa-solid fa-clock-rotate-left text-blue-400 text-base"></i>
                 </button>
@@ -57,75 +40,64 @@
         </div>
     </header>
 
-    <!-- ========================================================= -->
-    <!-- TELA 1: FORMULÁRIO DE LANÇAMENTO (PÁGINA PRINCIPAL) -->
-    <!-- ========================================================= -->
     <main id="viewLauncher" class="flex-grow max-w-5xl w-full mx-auto p-4 md:p-6 flex flex-col gap-6">
         
-        <!-- Card de Cabeçalho do Pedido (Dados Gerais) -->
+        <!-- INFORMAÇÕES DO PEDIDO COM HORÁRIO E PRIORIDADE -->
         <div class="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-md">
             <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
                 <h2 class="text-md font-semibold text-slate-200 flex items-center gap-2">
                     <i class="fa-solid fa-circle-info text-blue-500"></i> Informações do Pedido
                 </h2>
-                <span class="text-xs text-slate-500">Campos obrigatórios *</span>
             </div>
             
-            <!-- Grid Ajustado para 2 Colunas -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Campo Nome do Cliente -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="flex flex-col gap-1.5">
                     <label for="clientName" class="text-xs font-semibold text-slate-400">Nome do Cliente *</label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
-                            <i class="fa-solid fa-user text-xs"></i>
-                        </span>
-                        <input type="text" id="clientName" placeholder="Ex: Metalúrgica Anchieta Ltda" 
-                            class="w-full bg-slate-900 border border-slate-800 rounded-lg py-2.5 pl-9 pr-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-user text-xs"></i></span>
+                        <input type="text" id="clientName" placeholder="Ex: Metalúrgica..." class="w-full bg-slate-900 border border-slate-800 rounded-lg py-2.5 pl-9 pr-3 text-sm text-slate-100 focus:ring-2 focus:ring-blue-500/50">
                     </div>
                 </div>
 
-                <!-- Campo Data com Navegador Rápido de Dias -->
                 <div class="flex flex-col gap-1.5">
                     <label for="orderDate" class="text-xs font-semibold text-slate-400">Data de Emissão *</label>
-                    <div class="flex flex-col gap-1.5">
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
-                                <i class="fa-solid fa-calendar-day text-xs"></i>
-                            </span>
-                            <input type="date" id="orderDate" onchange="resetarSlotsDoDia()"
-                                class="w-full bg-slate-900 border border-slate-800 rounded-lg py-2 pl-9 pr-3 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all">
-                        </div>
-                        <!-- Botões Rápidos de Setas para Dias -->
-                        <div class="flex gap-1">
-                            <button type="button" onclick="mudarDiaForm(-1)" class="flex-1 bg-slate-800 hover:bg-slate-750 text-slate-300 text-[10px] font-bold py-1 rounded border border-slate-700 transition-all">
-                                <i class="fa-solid fa-chevron-left mr-1"></i> Anterior
-                            </button>
-                            <button type="button" onclick="mudarDiaHojeForm()" class="flex-1 bg-slate-800 hover:bg-slate-750 text-slate-300 text-[10px] font-bold py-1 rounded border border-slate-700 transition-all">
-                                Hoje
-                            </button>
-                            <button type="button" onclick="mudarDiaForm(1)" class="flex-1 bg-slate-800 hover:bg-slate-750 text-slate-300 text-[10px] font-bold py-1 rounded border border-slate-700 transition-all">
-                                Seguinte <i class="fa-solid fa-chevron-right ml-1"></i>
-                            </button>
-                        </div>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-calendar-day text-xs"></i></span>
+                        <input type="date" id="orderDate" class="w-full bg-slate-900 border border-slate-800 rounded-lg py-2 pl-9 pr-3 text-sm text-slate-100 focus:ring-2 focus:ring-blue-500/50">
                     </div>
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-semibold text-slate-400">Janela de Horário (2h) *</label>
+                    <div class="flex items-center gap-2">
+                        <input type="time" id="horaInicio" onchange="calcularHoraFim()" class="w-full bg-slate-900 border border-slate-800 rounded-lg py-2 px-2 text-sm text-slate-100 focus:ring-2 focus:ring-blue-500/50" required>
+                        <span class="text-slate-500 text-xs font-bold">às</span>
+                        <input type="time" id="horaFim" readonly class="w-full bg-slate-900/50 border border-slate-800 rounded-lg py-2 px-2 text-sm text-slate-400 cursor-not-allowed">
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                    <label for="prioridadePedido" class="text-xs font-semibold text-slate-400">Prioridade *</label>
+                    <select id="prioridadePedido" class="w-full bg-slate-900 border border-slate-800 rounded-lg py-2.5 px-3 text-sm text-slate-100 focus:ring-2 focus:ring-blue-500/50 cursor-pointer">
+                        <option value="Baixa">🟢 Baixa</option>
+                        <option value="Media" selected>🟡 Média</option>
+                        <option value="Alta">🔴 Alta (Urgente)</option>
+                    </select>
                 </div>
             </div>
         </div>
 
-        <!-- Card de Tabela Dinâmica de Itens -->
+        <!-- Tabela Dinâmica de Itens -->
         <div class="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-md flex-grow flex flex-col justify-between">
             <div>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4 mb-4">
                     <h2 class="text-md font-semibold text-slate-200 flex items-center gap-2">
                         <i class="fa-solid fa-list-ol text-blue-500"></i> Itens do Pedido
                     </h2>
-                    <button onclick="adicionarLinha()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 font-semibold transition-all shadow-md shadow-blue-500/10">
+                    <button onclick="adicionarLinha()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 font-semibold transition-all shadow-md">
                         <i class="fa-solid fa-plus text-[10px]"></i> Adicionar Item
                     </button>
                 </div>
-
-                <!-- Tabela Dinâmica Sem Coluna Subtotal -->
                 <div class="overflow-x-auto w-full custom-scrollbar">
                     <table class="w-full text-left border-collapse">
                         <thead>
@@ -136,31 +108,24 @@
                                 <th class="py-3 px-3 w-12 text-center"></th>
                             </tr>
                         </thead>
-                        <tbody id="itensTableBody">
-                            <!-- Inserção Dinâmica via JS -->
-                        </tbody>
+                        <tbody id="itensTableBody"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Resumo Geral e Rodapé da Tabela -->
             <div class="border-t border-slate-800 pt-6 mt-6 flex flex-col sm:flex-row justify-between items-stretch sm:items-end gap-6">
                 <div class="text-xs text-slate-500 max-w-sm self-center leading-relaxed">
-                    <i class="fa-solid fa-circle-question"></i> Preencha os campos e as quantidades. O ID do pedido será gerado dinamicamente e o total calculado assim que você clicar em <strong>Inserir Pedido</strong>.
+                    <i class="fa-solid fa-circle-question"></i> O ID do pedido será gerado e processado no servidor ao clicar no botão.
                 </div>
-                
                 <div class="flex flex-col gap-4 min-w-[320px]">
-                    <!-- Bloco de Valores (Impostos e Subtotal removidos) -->
                     <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col gap-2 shadow-inner">
                         <div class="flex justify-between items-center text-sm font-bold text-white">
                             <span>Valor Total do Pedido:</span>
                             <span class="text-lg text-emerald-400" id="totalDisplay">R$ 0,00</span>
                         </div>
                     </div>
-
-                    <!-- Botão INSERIR PEDIDO (Disparador do Popup) -->
-                    <button onclick="abrirModalProducao()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-blue-500/20 text-sm hover:-translate-y-0.5 active:translate-y-0">
-                        <i class="fa-solid fa-industry text-base"></i> Inserir Pedido & Agendar Horário
+                    <button onclick="salvarEInserirPedido()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2.5 transition-all shadow-lg text-sm">
+                        <i class="fa-solid fa-check"></i> Inserir e Finalizar Pedido
                     </button>
                 </div>
             </div>
@@ -168,116 +133,7 @@
     </main>
 
     <!-- ========================================================= -->
-    <!-- TELA 2: PÁGINA DE HISTÓRICO DE PEDIDOS SOLICITADOS -->
-    <!-- ========================================================= -->
-    <main id="viewOrdersList" class="hidden flex-grow max-w-5xl w-full mx-auto p-4 md:p-6 flex flex-col gap-6">
-        <div class="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-md">
-            
-            <!-- Cabeçalho da Página -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4 mb-6">
-                <div>
-                    <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
-                        <i class="fa-solid fa-boxes-stacked text-blue-500"></i> Pedidos Solicitados
-                    </h2>
-                    <p class="text-xs text-slate-400 mt-1">Agrupados por data de forma cronológica decrescente</p>
-                </div>
-                
-                <button onclick="mostrarPaginaLancamento()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 font-semibold transition-all border border-slate-700">
-                    <i class="fa-solid fa-arrow-left"></i> Voltar ao Lançamento
-                </button>
-            </div>
-
-            <!-- Filtros de Visualização -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 bg-slate-900/60 p-4 rounded-xl border border-slate-800/80">
-                <!-- Busca de Cliente -->
-                <div class="flex flex-col gap-1.5">
-                    <label for="filterClient" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Filtrar por Cliente</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
-                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                        </span>
-                        <input type="text" id="filterClient" oninput="renderizarPaginaPedidos()" placeholder="Buscar cliente..." 
-                            class="w-full bg-slate-950 border border-slate-800 rounded-lg py-2 pl-9 pr-3 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500">
-                    </div>
-                </div>
-
-                <!-- Filtro de Data -->
-                <div class="flex flex-col gap-1.5">
-                    <label for="filterDate" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Filtrar por Data Específica</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
-                            <i class="fa-solid fa-calendar text-xs"></i>
-                        </span>
-                        <input type="date" id="filterDate" onchange="renderizarPaginaPedidos()" 
-                            class="w-full bg-slate-950 border border-slate-800 rounded-lg py-2 pl-9 pr-3 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Listagem Dinâmica Agrupada por Data -->
-            <div id="ordersCardsContainer" class="flex flex-col gap-6">
-                <!-- Gerado dinamicamente via JS -->
-            </div>
-
-        </div>
-    </main>
-
-    <!-- ========================================================= -->
-    <!-- MODAL PRINCIPAL: ALOCAÇÃO DE PRODUÇÃO (INSERÇÃO) -->
-    <!-- ========================================================= -->
-    <div id="productionModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all">
-        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-lg w-full shadow-2xl flex flex-col gap-4 text-left transform scale-95 transition-transform duration-300">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <div class="flex items-center gap-2.5">
-                    <div class="bg-blue-600/10 text-blue-400 p-2 rounded-lg">
-                        <i class="fa-solid fa-business-time text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-base font-bold text-white">Alocar Janela de Produção</h3>
-                        <p id="modalSubtitle" class="text-xs text-slate-400">Selecione uma janela de 2 horas disponível</p>
-                    </div>
-                </div>
-                <button onclick="fecharModalProducao()" class="text-slate-500 hover:text-slate-300 transition-colors">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="flex flex-col gap-2">
-                    <label class="text-xs font-semibold text-slate-300">Horário *</label>
-                    <select id="formHorario" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs p-2.5 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none">
-                        <option value="07:00 às 09:00">07:00 às 09:00</option>
-                        <option value="09:00 às 11:00">09:00 às 11:00</option>
-                        <option value="11:00 às 13:00">11:00 às 13:00</option>
-                        <option value="13:00 às 15:00">13:00 às 15:00</option>
-                        <option value="15:00 às 17:00">15:00 às 17:00</option>
-                        <option value="17:00 às 19:00">17:00 às 19:00</option>
-                    </select>
-                </div>
-
-                <div class="flex flex-col gap-2">
-                    <label class="text-xs font-semibold text-slate-300">Prioridade *</label>
-                    <select id="formPrioridade" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs p-2.5 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none">
-                        <option value="Baixa">Baixa</option>
-                        <option value="Media" selected>Media</option>
-                        <option value="Alta">Alta</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="flex gap-3 border-t border-slate-800 pt-4">
-                <button onclick="fecharModalProducao()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 rounded-lg text-xs transition-all border border-slate-700">
-                    Cancelar
-                </button>
-                <button onclick="salvarEInserirPedido()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-lg text-xs transition-all shadow-md shadow-emerald-500/10 flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-check"></i> Confirmar Lançamento
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ========================================================= -->
-    <!-- MODAL PRINCIPAL: GERENCIADOR DE GRADE (CONTROLE DE ATRASOS) -->
+    <!-- MODAL: GERENCIADOR DE GRADE (CONTROLE DE ATRASOS) -->
     <!-- ========================================================= -->
     <div id="gridManagerModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all">
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-2xl w-full shadow-2xl flex flex-col gap-4 text-left transform scale-95 transition-transform duration-300">
@@ -288,7 +144,7 @@
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-white">Painel Operacional da Grade</h3>
-                        <p class="text-xs text-slate-400">Ajuste gargalos, atrasos ou altere a prioridade das peças na fila</p>
+                        <p class="text-xs text-slate-400">Visualize os pedidos agendados para o dia selecionado</p>
                     </div>
                 </div>
                 <button onclick="fecharGerenciadorGrade()" class="text-slate-500 hover:text-slate-300 transition-colors">
@@ -302,19 +158,23 @@
                     <strong class="text-slate-200 font-mono text-sm" id="managerDateDisplay">04/06/2026</strong>
                 </div>
 
+                <!-- Container onde a lista de pedidos do dia será renderizada -->
                 <div id="managerSlotsContainer" class="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
-                    <!-- Gerado via JS -->
+                    <!-- Gerado via JS (agora busca da API) -->
+                    <div class="text-center py-8 text-slate-500 text-xs italic">
+                        Carregando pedidos agendados...
+                    </div>
                 </div>
 
                 <!-- Setas de Navegação -->
                 <div class="flex items-center justify-between bg-slate-950 p-2 rounded-xl border border-slate-800/80 gap-2">
-                    <button onclick="navegarDia(-1)" class="flex-1 bg-slate-900 hover:bg-slate-800 text-slate-300 px-3 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
+                    <button onclick="navegarDiaGerenciador(-1)" class="flex-1 bg-slate-900 hover:bg-slate-800 text-slate-300 px-3 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
                         <i class="fa-solid fa-circle-arrow-left text-blue-400"></i> Anterior
                     </button>
-                    <button onclick="navegarDiaHoje()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-lg text-xs font-extrabold transition-all">
+                    <button onclick="navegarDiaHojeGerenciador()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-lg text-xs font-extrabold transition-all">
                         Hoje
                     </button>
-                    <button onclick="navegarDia(1)" class="flex-1 bg-slate-900 hover:bg-slate-800 text-slate-300 px-3 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
+                    <button onclick="navegarDiaGerenciador(1)" class="flex-1 bg-slate-900 hover:bg-slate-800 text-slate-300 px-3 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
                         Seguinte <i class="fa-solid fa-circle-arrow-right text-blue-400"></i>
                     </button>
                 </div>
@@ -322,7 +182,7 @@
 
             <div class="flex items-center justify-between border-t border-slate-800 pt-4">
                 <span class="text-[10px] text-slate-500 flex items-center gap-1.5 max-w-sm">
-                    <i class="fa-solid fa-info-circle text-blue-500"></i> Use "Passar Frente" (🔼) para subir o pedido de lugar na fila ou "Reagendar" para alocar em outra data/hora.
+                    <i class="fa-solid fa-info-circle text-blue-500"></i> Aqui você pode visualizar os pedidos alocados. Funções de reagendamento em desenvolvimento.
                 </span>
                 <button onclick="fecharGerenciadorGrade()" class="bg-slate-850 hover:bg-slate-800 border border-slate-700 text-slate-300 font-semibold px-4 py-2 rounded-lg text-xs transition-all">
                     Fechar
@@ -331,50 +191,6 @@
         </div>
     </div>
 
-    <!-- ========================================================= -->
-    <!-- SUB-MODAL: REAGENDAMENTO COMPLETO (HORA + DATA + PRIORIDADE) -->
-    <!-- ========================================================= -->
-    <div id="rescheduleSubModal" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur-xs z-[60] flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-750 p-5 rounded-xl max-w-sm w-full shadow-2xl flex flex-col gap-4 text-left animate-in fade-in zoom-in-95 duration-150">
-            <div>
-                <h4 class="text-sm font-bold text-white flex items-center gap-1.5">
-                    <i class="fa-solid fa-shuffle text-blue-400"></i> Mover e Editar Ordem
-                </h4>
-                <p id="rescheduleModalSubtitle" class="text-xs text-slate-400 mt-1">Altere o agendamento do pedido</p>
-            </div>
-
-            <!-- Data de Destino -->
-            <div class="flex flex-col gap-1.5">
-                <label for="targetDateSelector" class="text-xs text-slate-400 font-semibold">Data de Destino:</label>
-                <input type="date" id="targetDateSelector" onchange="atualizarOpcoesSlotsDestino()"
-                    class="w-full bg-slate-950 border border-slate-800 rounded-lg py-2 px-3 text-xs text-slate-100 font-medium focus:ring-1 focus:ring-blue-500">
-            </div>
-
-            <!-- Horário de Destino -->
-            <div class="flex flex-col gap-1.5">
-                <label for="targetSlotSelector" class="text-xs text-slate-400 font-semibold">Horário de Destino:</label>
-                <select id="targetSlotSelector" class="w-full bg-slate-950 border border-slate-800 rounded-lg py-2.5 px-3 text-xs text-slate-200 font-mono focus:ring-1 focus:ring-blue-500">
-                    <!-- Gerado via JS -->
-                </select>
-            </div>
-
-            <!-- Alteração de Prioridade no Reagendamento -->
-            <div class="flex flex-col gap-1.5">
-                <label class="text-xs text-slate-400 font-semibold">Nova Prioridade:</label>
-                <div class="grid grid-cols-3 gap-2">
-                    <button type="button" onclick="setReschedulePrioridade('Baixa')" id="resPriorityBaixa" class="py-1.5 rounded-lg border border-slate-800 bg-slate-950 text-[10px] font-bold transition-all text-slate-400">🟢 Baixa</button>
-                    <button type="button" onclick="setReschedulePrioridade('Media')" id="resPriorityMedia" class="py-1.5 rounded-lg border border-slate-800 bg-slate-950 text-[10px] font-bold transition-all text-slate-400">🟡 Média</button>
-                    <button type="button" onclick="setReschedulePrioridade('Alta')" id="resPriorityAlta" class="py-1.5 rounded-lg border border-slate-800 bg-slate-950 text-[10px] font-bold transition-all text-slate-400">🔴 Alta</button>
-                </div>
-            </div>
-
-            <!-- Ações -->
-            <div class="flex gap-2 pt-2">
-                <button onclick="fecharSubModalReagendar()" class="flex-1 bg-slate-800 hover:bg-slate-750 text-slate-450 text-xs py-2 rounded-lg font-medium border border-slate-750 transition-all">Cancelar</button>
-                <button onclick="confirmarReagendamento()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-xs py-2 rounded-lg font-bold transition-all shadow-md">Confirmar</button>
-            </div>
-        </div>
-    </div>
 
     <!-- Modal de Feedback Geral -->
     <div id="feedbackModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -386,367 +202,101 @@
                 <h3 class="text-lg font-bold text-white">Lançamento Efetuado!</h3>
                 <p id="modalMessage" class="text-xs text-slate-400 mt-1 leading-relaxed">Operação concluída com sucesso!</p>
             </div>
-            <button onclick="fecharModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold py-2 rounded-lg text-xs transition-all border border-slate-700">
-                Fechar
-            </button>
+            <button onclick="fecharModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold py-2 rounded-lg text-xs border border-slate-700">Fechar</button>
         </div>
     </div>
 
-    <!-- Toast Notification flutuante -->
-    <div id="toast" class="hidden fixed bottom-5 right-5 bg-slate-950 border border-slate-800 text-slate-200 px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-2.5 text-xs transition-all duration-300 transform translate-y-2 opacity-0">
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed bottom-5 right-5 bg-slate-950 border border-slate-800 text-slate-200 px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-2.5 text-xs transition-all duration-300">
         <span id="toastIcon"><i class="fa-solid fa-info-circle text-blue-500"></i></span>
         <span id="toastMessage">Informativo</span>
     </div>
 
-    <!-- ========================================================= -->
-    <!-- LOGICA E SCRIPT COMPLETO DE SIMULAÇÃO (SPA) -->
-    <!-- ========================================================= -->
     <script>
-        // Array de Itens de entrada carregado em memória
         let itens = [];
-
-        // Estado do Planejamento
-        let producao = {
-            horario: "",
-            prioridade: "Media"
-        };
-    
-
-        const gradeSlots = [
-            "07:00 às 09:00",
-            "09:00 às 11:00",
-            "11:00 às 13:00",
-            "13:00 às 15:00",
-            "15:00 às 17:00",
-            "17:00 às 19:00"
-        ];
-
-        // Dados de agendamento em memória estruturado com itens persistidos (ID ocultado)
-        let agendamentosExistentes = {};
-        
-        // Estado temporário para o reagendador
-        let slotOrigemTemporario = null;
-        let prioridadeReagendamentoTemporario = "Media";
+        let dataGerenciadorAtual = "";
 
         window.onload = function() {
             const hoje = new Date().toISOString().split('T')[0];
             document.getElementById('orderDate').value = hoje;
-            document.getElementById('filterDate').value = hoje;
-            
-            renderizarTabela();
-        }
-
-        function resetarSlotsDoDia() {
-        
-                producao.horario = ""; 
-                renderizarGradeHorarios()
-        }
-
-        // Navegadores rápidos de dia no formulário
-        function mudarDiaForm(offset) {
-            const input = document.getElementById('orderDate');
-            const dataAtual = new Date(input.value + "T00:00:00");
-            dataAtual.setDate(dataAtual.getDate() + offset);
-            input.value = dataAtual.toISOString().split('T')[0];
-            resetarSlotsDoDia();
-            showToast("<i class='fa-solid fa-calendar text-blue-400'></i>", `Data definida para: ${formatarDataBr(input.value)}`);
-        }
-
-        function mudarDiaHojeForm() {
-            const input = document.getElementById('orderDate');
-            const hojeStr = new Date().toISOString().split('T')[0];
-            input.value = hojeStr;
-            resetarSlotsDoDia();
-            showToast("<i class='fa-solid fa-calendar text-blue-400'></i>", "Data redefinida para Hoje");
-        }
-
-        // SPA: ALTERNÂNCIA DE TELAS (Lançamento vs Lista de Pedidos Solicitados)
-        function mostrarPaginaPedidos() {
-            document.getElementById('viewLauncher').classList.add('hidden');
-            document.getElementById('viewOrdersList').classList.remove('hidden');
-            renderizarPaginaPedidos();
-        }
-
-        function mostrarPaginaLancamento() {
-            document.getElementById('viewOrdersList').classList.add('hidden');
-            document.getElementById('viewLauncher').classList.remove('hidden');
-        }
-
-       // RENDERIZA A LISTA DE TODOS OS PEDIDOS SOLICITADOS AGRUPADOS POR DATA
-       function renderizarPaginaPedidos() {
-    const container = document.getElementById('ordersCardsContainer');
-    container.innerHTML = '';
-
-    const buscaCliente = document.getElementById('filterClient').value.trim().toLowerCase();
-    const buscaData = document.getElementById('filterDate').value;
-
-    let todosPedidos = [];
-    
-    // 1. Coleta e processa os pedidos
-    Object.keys(agendamentosExistentes).forEach(data => {
-        Object.keys(agendamentosExistentes[data]).forEach(slot => {
-            const ped = agendamentosExistentes[data][slot];
-
-            todosPedidos.push({
-            id: ped.id_pedido,
-            cliente: ped.cliente,
-            prioridade: ped.prioridade || "Media", 
-            total: ped.total || 0,
-            data: data,
-            horario: ped.horario || slot, 
-            itens: itensConvertidos
-            });
-        });
-    });
-
-    // 2. Filtros
-    if (buscaData) todosPedidos = todosPedidos.filter(p => p.data === buscaData);
-    if (buscaCliente) todosPedidos = todosPedidos.filter(p => p.cliente.toLowerCase().includes(buscaCliente));
-
-    // 3. Verifica se vazio
-    if (todosPedidos.length === 0) {
-        container.innerHTML = `
-            <div class="text-center py-10 border border-slate-800 border-dashed rounded-xl bg-slate-900/30">
-                <i class="fa-solid fa-folder-open text-slate-650 text-3xl mb-3 block"></i>
-                <span class="text-xs text-slate-500 font-medium">Nenhum pedido solicitado localizado.</span>
-            </div>
-        `;
-        return;
-    }
-
-    // 4. Agrupamento
-    let agrupados = {};
-    todosPedidos.forEach(p => {
-        if (!agrupados[p.data]) agrupados[p.data] = [];
-        agrupados[p.data].push(p);
-    });
-
-    // 5. Ordenação e Renderização (A PARTE QUE VOCÊ ESTAVA EM DÚVIDA)
-    const datasOrdenadas = Object.keys(agrupados).sort((a, b) => b.localeCompare(a));
-
-    datasOrdenadas.forEach(data => {
-        let dataHtml = `
-            <div class="flex flex-col gap-4">
-                <div class="flex items-center gap-2 border-b border-slate-800 pb-2 mt-4">
-                    <span class="bg-blue-600/10 text-blue-400 p-1.5 rounded-lg text-xs">
-                        <i class="fa-solid fa-calendar"></i>
-                    </span>
-                    <h3 class="text-xs font-black text-slate-300 uppercase tracking-wider">Data: ${formatarDataBr(data)}</h3>
-                </div>
-        `;
-
-        agrupados[data].forEach((p, idx) => {
-            let badgeClass = "text-blue-400 bg-blue-500/10 border-blue-500/20";
-            if (p.prioridade === "Baixa") badgeClass = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
-            if (p.prioridade === "Alta") badgeClass = "text-red-400 bg-red-500/10 border-red-500/20";
-
-            let itensTabelaRowsHtml = p.itens.map(item => `
-                <tr class="border-b border-slate-800/60 text-slate-300">
-                    <td class="py-2 px-3 text-center font-bold text-slate-400">${item.quant}</td>
-                    <td class="py-2 px-3">${item.descricao || "Item"}</td>
-                    <td class="py-2 px-3 text-right font-mono text-xs">${formatarMoeda(item.valor)}</td>
-                    <td class="py-2 px-3 text-right font-mono text-xs font-semibold text-slate-100">${formatarMoeda(item.quant * item.valor)}</td>
-                </tr>
-            `).join('');
-
-            // AQUI VOCÊ ADICIONA O CARD AO DATAHTML
-            dataHtml += `
-                <div class="border border-slate-800 bg-slate-950/45 p-4 rounded-xl flex flex-col gap-4">
-                    <div class="flex justify-between items-center">
-                        <div class="flex items-center gap-2.5">
-                            <span class="text-xs font-bold text-slate-100 bg-slate-800 px-2 py-1 rounded font-mono">
-                                <i class="fa-solid fa-clock text-blue-400 mr-1"></i> ${p.horario || "Não definido"}
-                            </span>
-                            <strong class="text-sm text-slate-200">${p.cliente}</strong>
-                            <span class="text-[9px] uppercase font-bold border rounded px-1.5 py-0.5 ${badgeClass}">${p.prioridade || "Media"}</span>
-                        </div>
-                        <button onclick="deletarPedidoDireto('${p.data}', '${p.horario}')" class="text-slate-500 hover:text-red-400">
-                            <i class="fa-solid fa-trash-can text-xs"></i>
-                        </button>
-                    </div>
-                    <div class="overflow-x-auto border border-slate-850 rounded-lg bg-slate-900/40">
-                        <table class="w-full text-xs">
-                            <thead class="text-[10px] text-slate-500 bg-slate-900/80 uppercase">
-                                <tr><th class="py-2 px-3">Quant.</th><th class="py-2 px-3">Descrição</th><th class="py-2 px-3">Unit.</th><th class="py-2 px-3">Total</th></tr>
-                            </thead>
-                            <tbody>${itensTabelaRowsHtml || '<tr><td colspan="4" class="text-center py-2 text-slate-600 italic">Sem itens</td></tr>'}</tbody>
-                        </table>
-                    </div>
-                    <div class="text-right text-sm font-bold text-emerald-400">Total: ${formatarMoeda(p.total)}</div>
-                </div>
-            `;
-        });
-
-        dataHtml += `</div>`;
-        container.insertAdjacentHTML('beforeend', dataHtml);
-    });
-}
-
-        // Permite excluir pedidos diretamente da lista
-        function deletarPedidoDireto(data, slot) {
-            if (agendamentosExistentes[data] && agendamentosExistentes[data][slot]) {
-                delete agendamentosExistentes[data][slot];
-                renderizarPaginaPedidos();
-                showToast("<i class='fa-solid fa-trash text-amber-500'></i>", "Pedido excluído do planejamento");
-            }
-        }
-
-        function abrirModalProducao() {
-    const modal = document.getElementById('productionModal');
-    if (!modal) {
-        console.error("ERRO: Elemento 'productionModal' não encontrado no HTML.");
-        return;
-    }
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    console.log("Modal aberto.");
-}
-
-function fecharModalProducao() {
-    const modal = document.getElementById('productionModal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-}
-        // Renderiza a lista de slots disponíveis no modal de alocação de produção
-        function renderizarGradeHorarios() {
-            const data = document.getElementById('orderDate').value;
-            const container = document.getElementById('slotsContainer');
-            container.innerHTML = '';
-
-            const ocupadosDoDia = agendamentosExistentes[data] || {};
-
-            gradeSlots.forEach(slot => {
-                const agendado = ocupadosDoDia[slot];
-                const isSelected = producao.horario === slot;
-
-                let borderStyle = "";
-                let badgeHtml = "";
-                let actionHtml = "";
-
-                if (agendado) {
-                    borderStyle = "border-red-950 bg-red-950/20 text-slate-500 cursor-not-allowed opacity-75";
-                    badgeHtml = `<span class="bg-red-500/10 text-red-400 text-[10px] font-bold px-2.5 py-1 rounded-full border border-red-500/20 flex items-center gap-1">
-                                    <i class="fa-solid fa-lock text-[8px]"></i> Reservado por ${agendado.cliente.substring(0, 15)}
-                                 </span>`;
-                    actionHtml = "";
-                } else if (isSelected) {
-                    borderStyle = "border-blue-500 bg-blue-600/15 text-white ring-2 ring-blue-500/40 shadow-lg shadow-blue-500/5";
-                    badgeHtml = `<span class="bg-blue-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full flex items-center gap-1">
-                                    <i class="fa-solid fa-circle-check"></i> Selecionado
-                                 </span>`;
-                    actionHtml = `onclick="selecionarSlot('${slot}')"`;
-                } else {
-                    borderStyle = "border-slate-800 bg-slate-950 hover:bg-slate-900/60 hover:border-slate-700 text-slate-300 cursor-pointer transition-all";
-                    badgeHtml = `<span class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full border border-emerald-500/20">Livre</span>`;
-                    actionHtml = `onclick="selecionarSlot('${slot}')"`;
-                }
-
-                const cardHtml = `
-                    <div ${actionHtml} class="flex justify-between items-center p-3 rounded-xl border ${borderStyle}">
-                        <span class="text-xs font-bold tracking-tight">${slot}</span>
-                        ${badgeHtml}
-                    </div>
-                `;
-                container.insertAdjacentHTML('beforeend', cardHtml);
-            });
-        }
-
-        function selecionarSlot(slot) {
-            producao.horario = slot;
-            renderizarGradeHorarios();
-        }
-
-        function setPrioridade(nivel) {
-            producao.prioridade = nivel;
-            
-            const btnBaixa = document.getElementById('btnPrioridadeBaixa');
-            const btnMedia = document.getElementById('btnPrioridadeMedia');
-            const btnAlta = document.getElementById('btnPrioridadeAlta');
-
-            [btnBaixa, btnMedia, btnAlta].forEach(btn => {
-                btn.className = "py-2 px-3 rounded-lg border border-slate-800 bg-slate-950 text-xs font-semibold transition-all hover:border-slate-700 text-slate-400";
-            });
-
-            if (nivel === 'Baixa') {
-                btnBaixa.className = "py-2 px-3 rounded-lg border border-emerald-500/50 bg-emerald-600/10 text-xs font-semibold text-emerald-400";
-            } else if (nivel === 'Media') {
-                btnMedia.className = "py-2 px-3 rounded-lg border border-blue-500/50 bg-blue-600/10 text-xs font-semibold text-blue-400";
-            } else if (nivel === 'Alta') {
-                btnAlta.className = "py-2 px-3 rounded-lg border border-red-500/50 bg-red-600/10 text-xs font-semibold text-red-400";
-            }
-        }
-
-        // CONFIRMAÇÃO DO PEDIDO (Gera o ID automaticamente, valida o cliente APENAS AQUI e clona a tabela de itens)
-        async function salvarEInserirPedido() {
-    const cliente = document.getElementById('clientName').value.trim();
-    const data = document.getElementById('orderDate').value;
-    
-    // Captura direta dos valores dos selects
-    const horario = document.getElementById('formHorario').value;
-    const prioridade = document.getElementById('formPrioridade').value;
-
-    if (!cliente) {
-        alert("Preencha o nome do cliente.");
-        return;
-    }
-
-    const payload = {
-    pedido_id: "MET-" + Math.floor(1000 + Math.random() * 9000),
-    cliente: document.getElementById('clientName').value.trim(),
-    data: document.getElementById('orderDate').value,
-    horario: document.getElementById('formHorario').value,     // Certifique-se deste ID
-    prioridade: document.getElementById('formPrioridade').value, // Certifique-se deste ID
-    total: itens.reduce((sum, item) => sum + (item.quant * item.valor), 0),
-    itens_json: JSON.stringify(itens)
-};
-
-    console.log("Enviando Payload:", payload);
-
-    try {
-        const response = await fetch('http://localhost:8001/api/novo-pedido', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        if (response.ok) {
-            alert("Sucesso! Pedido inserido.");
-            fecharModalProducao();
-            // Reseta para novo lançamento
-            document.getElementById('clientName').value = "";
+            dataGerenciadorAtual = hoje;
             itens = [{ id: Date.now(), quant: 1, descricao: "", valor: 0.00 }];
             renderizarTabela();
-        } else {
-            alert("Erro no servidor.");
         }
-    } catch (error) {
-        console.error("Falha:", error);
-    }
-}
-        // MODAL GERENCIADOR DE GRADE (CONTROLE DE ATRASOS)
+
+        function calcularHoraFim() {
+            const inicio = document.getElementById('horaInicio').value;
+            if (inicio) {
+                let [h, m] = inicio.split(':').map(Number);
+                h = (h + 2) % 24; 
+                const fim = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                document.getElementById('horaFim').value = fim;
+            }
+        }
+
+        async function salvarEInserirPedido() {
+            const data = document.getElementById('orderDate').value;
+            const cliente = document.getElementById('clientName').value.trim();
+            const horaInicio = document.getElementById('horaInicio').value;
+            const horaFim = document.getElementById('horaFim').value;
+            const prioridade = document.getElementById('prioridadePedido').value;
+
+            if (!cliente || !horaInicio) {
+                showToast("<i class='fa-solid fa-triangle-exclamation'></i>", "Preencha o cliente e o horário inicial.");
+                return;
+            }
+
+            let totalGeral = itens.reduce((sum, item) => sum + (item.quant * item.valor), 0);
+            const horarioFormatado = `${horaInicio} às ${horaFim}`;
+
+            const payload = {
+                pedido_id: "MET-" + Math.floor(1000 + Math.random() * 9000),
+                cliente: cliente,
+                data: data,
+                horario: horarioFormatado, 
+                prioridade: prioridade,
+                total: totalGeral,
+                itens_json: JSON.stringify(itens) 
+            };
+
+            try {
+                const response = await fetch('http://localhost:8001/api/novo-pedido', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    abrirModal("Lançamento Efetuado!", "Pedido enviado com sucesso para o banco de dados.");
+                    itens = [{ id: Date.now(), quant: 1, descricao: "", valor: 0.00 }];
+                    document.getElementById('clientName').value = "";
+                    document.getElementById('horaInicio').value = "";
+                    document.getElementById('horaFim').value = "";
+                    renderizarTabela();
+                } else {
+                    showToast("<i class='fa-solid fa-xmark text-red-500'></i>", "Erro retornado pela API.");
+                }
+            } catch (error) {
+                showToast("<i class='fa-solid fa-xmark text-red-500'></i>", "Erro ao conectar com o Servidor (Backend).");
+            }
+        }
+
+        /* ----- Lógica do Painel Operacional da Grade ----- */
         function abrirGerenciadorGrade() {
-        const data = document.getElementById('orderDate').value;
-        
-        document.getElementById('managerDateDisplay').innerText = formatarDataBr(data);
-
-        renderizarGradeGerenciador();
-
-        const modal = document.getElementById('gridManagerModal');
-        if (modal) {
+            // Usa a data atual do input principal como data inicial do gerenciador
+            dataGerenciadorAtual = document.getElementById('orderDate').value;
+            atualizarVisorDataGerenciador();
+            
+            const modal = document.getElementById('gridManagerModal');
             modal.classList.remove('hidden');
             setTimeout(() => {
-                const content = modal.querySelector('.max-w-2xl');
-                if(content) {
-                    content.classList.remove('scale-95');
-                    content.classList.add('scale-100');
-                }
+                modal.querySelector('.max-w-2xl').classList.remove('scale-95');
+                modal.querySelector('.max-w-2xl').classList.add('scale-100');
             }, 10);
-        } else {
-            console.error("ID gridManagerModal não encontrado no HTML");
-        }
-    }
 
-        // Fecha o modal do gerenciador de grade
+            carregarPedidosDoDia(dataGerenciadorAtual);
+        }
+
         function fecharGerenciadorGrade() {
             const modal = document.getElementById('gridManagerModal');
             modal.querySelector('.max-w-2xl').classList.remove('scale-100');
@@ -756,364 +306,133 @@ function fecharModalProducao() {
             }, 150);
         }
 
-        // RENDERIZA A GRADE INTERATIVA DE ATRASOS (DO GERENCIADOR)
-        function renderizarGradeGerenciador() {
-            const data = document.getElementById('orderDate').value;
-            const container = document.getElementById('managerSlotsContainer');
-
-            if (!container) return; // Segurança
-            container.innerHTML = '';
-        
-            // Busca agendamentos do dia
-            const ocupados = agendamentosExistentes[data] || {};
-        
-            gradeSlots.forEach((slot, index) => {
-                const agendado = ocupados[slot];
-                let itemHtml = "";
-            
-                if (agendado) {
-                    // Slot ocupado
-                    const ehOPrimeiro = index === 0;
-                    itemHtml = `
-                        <div class="border border-slate-750 bg-slate-950 p-4 rounded-xl flex flex-col md:flex-row justify-between md:items-center gap-3">
-                            <div class="flex flex-col gap-1">
-                                <span class="text-xs font-bold text-slate-200">${slot}</span>
-                                <span class="text-xs text-blue-400 font-medium">${agendado.cliente}</span>
-                            </div>
-                            <div class="flex items-center gap-1.5 justify-end">
-                                ${!ehOPrimeiro ? `
-                                    <button onclick="passarPeçaNaFrente('${slot}')" class="bg-blue-600/15 hover:bg-blue-600/30 text-blue-400 p-2 rounded-lg border border-blue-500/20 text-[11px] font-bold transition-all">
-                                        <i class="fa-solid fa-arrow-up"></i>
-                                    </button>
-                                ` : ''}
-                                <button onclick="iniciarReagendamentoSlot('${slot}')" class="bg-slate-800 hover:bg-slate-750 text-slate-300 p-2 rounded-lg border border-slate-700 text-[11px] font-bold transition-all">
-                                    <i class="fa-solid fa-shuffle"></i>
-                                </button>
-                                <button onclick="liberarSlotGrade('${slot}')" class="bg-red-500/15 hover:bg-red-500/35 text-red-400 p-2 rounded-lg border border-red-500/20 text-[11px] transition-all">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    // Slot livre
-                    itemHtml = `
-                        <div class="border border-slate-850 bg-slate-900/30 p-3.5 rounded-xl flex justify-between items-center text-slate-500 border-dashed">
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-mono font-bold text-slate-600 bg-slate-950 px-2.5 py-0.5 rounded border border-slate-850">${slot}</span>
-                                <span class="text-[10px] font-bold text-emerald-500 bg-emerald-500/5 border border-emerald-500/10 px-2 py-0.5 rounded uppercase">Livre</span>
-                            </div>
-                        </div>
-                    `;
-                }
-                container.insertAdjacentHTML('beforeend', itemHtml);
-            });
-        }
-        function navegarDia(offset) {
-            const input = document.getElementById('orderDate');
-            const dataAtual = new Date(input.value + "T00:00:00");
-            dataAtual.setDate(dataAtual.getDate() + offset);
-            const novaDataStr = dataAtual.toISOString().split('T')[0];
-            input.value = novaDataStr;
-
-            // popularMockAgendamentos(novaDataStr);
-            document.getElementById('managerDateDisplay').innerText = formatarDataBr(novaDataStr);
-            renderizarGradeGerenciador();
-            resetarSlotsDoDia();
-            showToast("<i class='fa-solid fa-clock text-blue-400'></i>", `Visualizando grade de ${formatarDataBr(novaDataStr)}`);
-        }
-
-        function navegarDiaHoje() {
-            const input = document.getElementById('orderDate');
-            const hojeStr = new Date().toISOString().split('T')[0];
-            input.value = hojeStr;
-
-            // popularMockAgendamentos(hojeStr);
-            document.getElementById('managerDateDisplay').innerText = formatarDataBr(hojeStr);
-            renderizarGradeGerenciador();
-            resetarSlotsDoDia();
-            showToast("<i class='fa-solid fa-clock text-blue-400'></i>", "Visualizando grade de Hoje");
-        }
-
-                // RENDERIZA A GRADE INTERATIVA DE ATRASOS
-            function renderizarGradeHorarios() {
-            const data = document.getElementById('orderDate').value;
-            const container = document.getElementById('slotsContainer');
-                
-            // Se o container não existir, para a execução
-            if (!container) return; 
-                
-            container.innerHTML = '';
-                
-            // Como você tirou os mocks, garantimos que ocupados seja um objeto vazio
-            const ocupadosDoDia = agendamentosExistentes[data] || {};
-                
-            gradeSlots.forEach(slot => {
-                const agendado = ocupadosDoDia[slot];
-                const isSelected = producao.horario === slot;
-            
-                // Lógica de estilo para slot LIVRE ou OCUPADO
-                let borderStyle = isSelected 
-                    ? "border-blue-500 bg-blue-600/15 text-white ring-2 ring-blue-500/40" 
-                    : "border-slate-800 bg-slate-950 hover:bg-slate-900/60";
-
-                let badgeHtml = isSelected 
-                    ? `<span class="bg-blue-500 text-white text-[10px] font-black px-2 py-0.5 rounded">Selecionado</span>`
-                    : `<span class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-500/10">Livre</span>`;
-            
-                const cardHtml = `
-                    <div onclick="selecionarSlot('${slot}')" class="flex justify-between items-center p-3 rounded-xl border cursor-pointer transition-all ${borderStyle}">
-                        <span class="text-xs font-bold text-slate-200">${slot}</span>
-                        ${badgeHtml}
-                    </div>
-                `;
-                container.insertAdjacentHTML('beforeend', cardHtml);
-            });
-        }
-
-        // ALGORITMO: PASSAR A PEÇA NA FRENTE COM ATUALIZAÇÃO IMEDIATA
-        function passarPeçaNaFrente(slot) {
-            const data = document.getElementById('orderDate').value;
-            const index = gradeSlots.indexOf(slot);
-
-            if (index <= 0) return; 
-
-            const slotAnterior = gradeSlots[index - 1];
-            const ocupados = agendamentosExistentes[data] || {};
-
-            // Executa a inversão/troca de posição (Sobe a atual, desce a anterior)
-            const temp = ocupados[slot];
-            ocupados[slot] = ocupados[slotAnterior]; 
-            ocupados[slotAnterior] = temp; 
-
-            agendamentosExistentes[data] = ocupados;
-            
-            // ATUALIZAÇÃO OPERACIONAL AUTOMÁTICA
-            renderizarGradeGerenciador();
-            showToast("<i class='fa-solid fa-arrow-up text-blue-400'></i>", "Fluxo operacional reordenado!");
-        }
-
-        function liberarSlotGrade(slot) {
-            const data = document.getElementById('orderDate').value;
-            if (agendamentosExistentes[data] && agendamentosExistentes[data][slot]) {
-                delete agendamentosExistentes[data][slot];
-                renderizarGradeGerenciador();
-                showToast("<i class='fa-solid fa-trash text-amber-500'></i>", "Horário desocupado com sucesso.");
-            }
-        }
-
-        function bloquearManual(slot) {
-            const data = document.getElementById('orderDate').value;
-            if (!agendamentosExistentes[data]) {
-                agendamentosExistentes[data] = {};
-            }
-
-            agendamentosExistentes[data][slot] = {
-                id_pedido: "MANUT-REG",
-                cliente: "Bloqueio de Manutenção",
-                prioridade: "Baixa",
-                total: 0,
-                itens: []
-            };
-
-            renderizarGradeGerenciador();
-            showToast("<i class='fa-solid fa-lock text-emerald-400'></i>", "Horário reservado manualmente!");
-        }
-
-        // INICIALIZA SELETOR DE REAGENDAMENTO RÁPIDO COM DIA SEGUINTE E PRIORIDADE
-        function iniciarReagendamentoSlot(slot) {
-            slotOrigemTemporario = slot;
-            const dataOriginal = document.getElementById('orderDate').value;
-            const ocupados = agendamentosExistentes[dataOriginal] || {};
-            const pedido = ocupados[slot];
-
-            prioridadeReagendamentoTemporario = pedido.prioridade || "Media";
-
-            document.getElementById('rescheduleModalSubtitle').innerText = `Mover pedido de ${pedido.cliente} (${slot})`;
-            document.getElementById('targetDateSelector').value = dataOriginal;
-            
-            setReschedulePrioridade(prioridadeReagendamentoTemporario);
-            atualizarOpcoesSlotsDestino();
-
-            document.getElementById('rescheduleSubModal').classList.remove('hidden');
-        }
-
-        function atualizarOpcoesSlotsDestino() {
-            const targetDate = document.getElementById('targetDateSelector').value;
-            // popularMockAgendamentos(targetDate);
-            
-            const ocupadosNoDestino = agendamentosExistentes[targetDate] || {};
-            const selector = document.getElementById('targetSlotSelector');
-            selector.innerHTML = '';
-
-            gradeSlots.forEach(targetSlot => {
-                const dataOriginal = document.getElementById('orderDate').value;
-                if (targetDate === dataOriginal && targetSlot === slotOrigemTemporario) {
-                    return;
-                }
-
-                const targetOcupado = ocupadosNoDestino[targetSlot];
-                const label = targetOcupado 
-                    ? `${targetSlot} (Trocar com ${targetOcupado.cliente.substring(0, 15)})` 
-                    : `${targetSlot} (Livre / Disponível)`;
-                
-                selector.insertAdjacentHTML('beforeend', `<option value="${targetSlot}">${label}</option>`);
-            });
-        }
-
-        // Controle de Prioridade no Reagendamento
-        function setReschedulePrioridade(nivel) {
-            prioridadeReagendamentoTemporario = nivel;
-            const btnB = document.getElementById('resPriorityBaixa');
-            const btnM = document.getElementById('resPriorityMedia');
-            const btnA = document.getElementById('resPriorityAlta');
-
-            [btnB, btnM, btnA].forEach(btn => {
-                btn.className = "py-1.5 rounded-lg border border-slate-800 bg-slate-950 text-[10px] font-bold transition-all text-slate-455";
-            });
-
-            if (nivel === "Baixa") btnB.className = "py-1.5 rounded-lg border border-emerald-500/50 bg-emerald-600/10 text-[10px] font-bold transition-all text-emerald-400";
-            if (nivel === "Media") btnM.className = "py-1.5 rounded-lg border border-blue-500/50 bg-blue-600/10 text-[10px] font-bold transition-all text-blue-400";
-            if (nivel === "Alta") btnA.className = "py-1.5 rounded-lg border border-red-500/50 bg-red-600/10 text-[10px] font-bold transition-all text-red-400";
-        }
-
-        function fecharSubModalReagendar() {
-            document.getElementById('rescheduleSubModal').classList.add('hidden');
-            slotOrigemTemporario = null;
-        }
-
-        // EXECUTA REAGENDAMENTO OPERACIONAL E REDIRECIONA AUTOMATICAMENTE A DATA
-        function confirmarReagendamento() {
-            const dataOriginal = document.getElementById('orderDate').value;
-            const targetDate = document.getElementById('targetDateSelector').value;
-            const targetSlot = document.getElementById('targetSlotSelector').value;
-
-            if (!slotOrigemTemporario || !targetSlot) return;
-
-            // popularMockAgendamentos(dataOriginal);
-            // popularMockAgendamentos(targetDate);
-
-            const ocupadosOrigem = agendamentosExistentes[dataOriginal] || {};
-            const ocupadosDestino = agendamentosExistentes[targetDate] || {};
-
-            const itemOrigem = ocupadosOrigem[slotOrigemTemporario];
-            const itemDestino = ocupadosDestino[targetSlot];
-
-            // Atualiza a prioridade do pedido para a prioridade selecionada no reagendador
-            itemOrigem.prioridade = prioridadeReagendamentoTemporario;
-
-            if (dataOriginal === targetDate) {
-                // Troca de slots no mesmo dia
-                ocupadosOrigem[slotOrigemTemporario] = itemDestino;
-                ocupadosOrigem[targetSlot] = itemOrigem;
-
-                if (!ocupadosOrigem[slotOrigemTemporario]) delete ocupadosOrigem[slotOrigemTemporario];
-            } else {
-                // Swap ou movimentação entre datas distintas
-                ocupadosOrigem[slotOrigemTemporario] = itemDestino; 
-                ocupadosDestino[targetSlot] = itemOrigem;       
-
-                if (!ocupadosOrigem[slotOrigemTemporario]) delete ocupadosOrigem[slotOrigemTemporario];
-                agendamentosExistentes[targetDate] = ocupadosDestino;
-            }
-
-            agendamentosExistentes[dataOriginal] = ocupadosOrigem;
-
-            fecharSubModalReagendar();
-            
-            // --- REDIRECIONAMENTO E ATUALIZAÇÃO DE DATA AUTOMÁTICA ---
-            document.getElementById('orderDate').value = targetDate;
-            document.getElementById('managerDateDisplay').innerText = formatarDataBr(targetDate);
-            
-            renderizarGradeGerenciador();
-            resetarSlotsDoDia();
-            
-            showToast("<i class='fa-solid fa-shuffle text-blue-400'></i>", `Pedido reagendado para o dia ${formatarDataBr(targetDate)} às ${targetSlot}!`);
-        }
-
-        // RENDERIZAÇÃO DA TABELA SEM COLUNA DE SUBTOTAL
-        function renderizarTabela() {
-    const tbody = document.getElementById('itensTableBody');
-    tbody.innerHTML = '';
-
-    itens.forEach((item, index) => {
-        const tr = document.createElement('tr');
-        // Adicionamos classes de padding e borda para dar o aspecto de "linha de formulário"
-        tr.className = "group border-b border-slate-800/50 hover:bg-slate-900/30 transition-all";
-        
-        tr.innerHTML = `
-            <td class="py-3 px-3 text-center">
-                <input type="number" min="1" value="${item.quant}" 
-                    class="w-16 bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-center text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 font-bold"
-                    onchange="alterarItem(${index}, 'quant', this.value)">
-            </td>
-            <td class="py-3 px-3">
-                <input type="text" value="${item.descricao}" placeholder="Descrição do item..."
-                    class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    oninput="alterarItem(${index}, 'descricao', this.value)">
-            </td>
-            <td class="py-3 px-3">
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 text-xs font-bold">R$</span>
-                    <input type="number" min="0" step="0.01" value="${item.valor.toFixed(2)}" 
-                        class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
-                        onchange="alterarItem(${index}, 'valor', this.value)">
-                </div>
-            </td>
-            <td class="py-3 px-3 text-center">
-                <button onclick="removerLinha(${index})" class="text-slate-600 hover:text-red-400 p-2 rounded-lg hover:bg-red-500/10 transition-all" title="Remover item">
-                    <i class="fa-solid fa-trash-can text-xs"></i>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-
-    calcularTotais();
-}
-        // Adicionar Linha de Item
-        function adicionarLinha() {
-            itens.push({ id: Date.now(), quant: 1, descricao: "", valor: 0.00 });
-            renderizarTabela();
-            showToast("<i class='fa-solid fa-plus text-emerald-400'></i>", "Nova linha adicionada");
-        }
-
-        // Remover Linha de Item
-        function removerLinha(index) {
-            itens.splice(index, 1);
-            renderizarTabela();
-            showToast("<i class='fa-solid fa-trash text-amber-500'></i>", "Item removido");
-        }
-
-        function alterarItem(index, campo, valor) {
-            if (campo === 'quant') {
-                itens[index].quant = parseInt(valor) || 0;
-            } else if (campo === 'valor') {
-                itens[index].valor = parseFloat(valor) || 0.00;
-            } else if (campo === 'descricao') {
-                itens[index].descricao = valor;
-            }
-            calcularTotais();
-        }
-
-        // Formatadores
-        function formatarMoeda(valor) {
-            return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        }
-
         function formatarDataBr(dataStr) {
             if (!dataStr) return "";
             const partes = dataStr.split('-');
             return `${partes[2]}/${partes[1]}/${partes[0]}`;
         }
 
+        function atualizarVisorDataGerenciador() {
+            document.getElementById('managerDateDisplay').innerText = formatarDataBr(dataGerenciadorAtual);
+        }
+
+        function navegarDiaGerenciador(offset) {
+            const dataAtualObj = new Date(dataGerenciadorAtual + "T00:00:00");
+            dataAtualObj.setDate(dataAtualObj.getDate() + offset);
+            dataGerenciadorAtual = dataAtualObj.toISOString().split('T')[0];
+            
+            atualizarVisorDataGerenciador();
+            carregarPedidosDoDia(dataGerenciadorAtual);
+        }
+
+        function navegarDiaHojeGerenciador() {
+            dataGerenciadorAtual = new Date().toISOString().split('T')[0];
+            atualizarVisorDataGerenciador();
+            carregarPedidosDoDia(dataGerenciadorAtual);
+        }
+
+        // Busca na API os pedidos de uma data específica
+        async function carregarPedidosDoDia(dataStr) {
+            const container = document.getElementById('managerSlotsContainer');
+            container.innerHTML = `<div class="text-center py-8 text-slate-500 text-xs italic"><i class="fa-solid fa-spinner fa-spin"></i> Buscando agendamentos...</div>`;
+            
+            try {
+                // Reaproveitamos o endpoint de horários ocupados para pegar os horários daquele dia
+                // Em um cenário real mais completo, você criaria uma rota na API que retorna o objeto do pedido completo (Horário, Cliente, Prioridade)
+                const response = await fetch(`http://localhost:8001/api/horarios-ocupados?data=${dataStr}`);
+                if (!response.ok) throw new Error("Erro na API");
+                const dataRes = await response.json();
+                const horarios = dataRes.ocupados || [];
+
+                if (horarios.length === 0) {
+                    container.innerHTML = `
+                        <div class="border border-slate-850 bg-slate-900/30 p-6 rounded-xl flex justify-center items-center text-slate-500 border-dashed text-xs">
+                            Nenhum pedido agendado para este dia.
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = '';
+                // Como a API atual só retorna a string do horário, vamos renderizar apenas os horários ocupados.
+                // Se a API retornasse o cliente, poderíamos mostrar aqui também.
+                horarios.forEach(horario => {
+                    const itemHtml = `
+                        <div class="border border-slate-750 bg-slate-950 p-4 rounded-xl flex flex-col md:flex-row justify-between md:items-center gap-3">
+                            <div class="flex items-center gap-3">
+                                <span class="bg-blue-600/20 text-blue-400 p-2 rounded-lg text-xs"><i class="fa-solid fa-clock"></i></span>
+                                <span class="text-sm font-bold text-slate-200">${horario}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 justify-end">
+                                <span class="text-xs text-slate-500 italic px-2">Alocado no banco de dados</span>
+                            </div>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', itemHtml);
+                });
+
+            } catch (error) {
+                container.innerHTML = `<div class="text-center py-8 text-red-500 text-xs">Erro ao carregar dados do dia.</div>`;
+                console.error("Erro ao buscar dados do gerenciador:", error);
+            }
+        }
+
+
+        /* ----- Funções Auxiliares (Tabela, Calculos e UI) ----- */
+        function renderizarTabela() {
+            const tbody = document.getElementById('itensTableBody');
+            tbody.innerHTML = '';
+            itens.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "group border-b border-slate-800/50 hover:bg-slate-900/30 transition-all";
+                tr.innerHTML = `
+                    <td class="py-3 px-3 text-center">
+                        <input type="number" min="1" value="${item.quant}" onchange="alterarItem(${index}, 'quant', this.value)"
+                            class="w-16 bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-center text-slate-200 focus:ring-1 focus:ring-blue-500 font-bold">
+                    </td>
+                    <td class="py-3 px-3">
+                        <input type="text" value="${item.descricao}" placeholder="Descrição do item..." oninput="alterarItem(${index}, 'descricao', this.value)"
+                            class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-slate-200 focus:ring-1 focus:ring-blue-500">
+                    </td>
+                    <td class="py-3 px-3">
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 text-xs font-bold">R$</span>
+                            <input type="number" min="0" step="0.01" value="${item.valor.toFixed(2)}" onchange="alterarItem(${index}, 'valor', this.value)"
+                                class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-slate-200 focus:ring-1 focus:ring-blue-500 font-mono">
+                        </div>
+                    </td>
+                    <td class="py-3 px-3 text-center">
+                        <button onclick="removerLinha(${index})" class="text-slate-600 hover:text-red-400 p-2 rounded-lg hover:bg-red-500/10 transition-all" title="Remover item">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            calcularTotais();
+        }
+
+        function adicionarLinha() {
+            itens.push({ id: Date.now(), quant: 1, descricao: "", valor: 0.00 });
+            renderizarTabela();
+        }
+
+        function removerLinha(index) {
+            itens.splice(index, 1);
+            renderizarTabela();
+        }
+
+        function alterarItem(index, campo, valor) {
+            if (campo === 'quant') itens[index].quant = parseInt(valor) || 0;
+            else if (campo === 'valor') itens[index].valor = parseFloat(valor) || 0.00;
+            else if (campo === 'descricao') itens[index].descricao = valor;
+            calcularTotais();
+        }
+
         function calcularTotais() {
             let total = 0;
-            itens.forEach(item => {
-                total += item.quant * item.valor;
-            });
-
-            document.getElementById('totalDisplay').innerText = formatarMoeda(total);
+            itens.forEach(item => total += item.quant * item.valor);
+            document.getElementById('totalDisplay').innerText = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
 
         function abrirModal(titulo, message) {
@@ -1122,34 +441,13 @@ function fecharModalProducao() {
             document.getElementById('feedbackModal').classList.remove('hidden');
         }
 
-        function fecharModal() {
-            document.getElementById('feedbackModal').classList.add('hidden');
-            
-            // Reseta formulário para próximo lançamento
-            itens = [{ id: Date.now(), quant: 1, descricao: "", valor: 0.00 }];
-            document.getElementById('clientName').value = "";
-            renderizarTabela();
-            resetarSlotsDoDia();
-        }
+        function fecharModal() { document.getElementById('feedbackModal').classList.add('hidden'); }
 
         function showToast(iconHtml, message) {
             const toast = document.getElementById('toast');
             document.getElementById('toastIcon').innerHTML = iconHtml;
             document.getElementById('toastMessage').innerText = message;
-            
             toast.classList.remove('hidden');
-            setTimeout(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-                toast.classList.add('translate-y-0', 'opacity-100');
-            }, 50);
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-0', 'opacity-100');
-                toast.classList.add('translate-y-2', 'opacity-0');
-                setTimeout(() => {
-                    toast.classList.add('hidden');
-                }, 300);
-            }, 3000);
         }
     </script>
 </body>

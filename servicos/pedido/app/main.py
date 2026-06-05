@@ -24,72 +24,50 @@ def startup():
 def health():
     return {"status": "ok", "servico": "pedido"}
 
-# No seu pedido/app/main.py
-@app.get("/api/pedidos")
-def listar_pedidos():
-    db = conectar_db()
-    try:
-        with db.cursor() as cursor:
-            cursor.execute("SELECT * FROM db_pedido_pedidos ORDER BY data_emissao DESC")
-            pedidos = cursor.fetchall()
-            # Converte itens_json de volta para objeto para o JS
-            for p in pedidos:
-                if p.get('itens_json'):
-                    p['itens'] = json.loads(p['itens_json'])
-            return pedidos
-    finally:
-        db.close()
-
 @app.post("/api/novo-pedido")
 def criar_pedido(payload: dict):
-    # Log para debug inicial
-    print(f"Dados recebidos no Python: {payload}")
-    
+    # TRUQUE DE DEBUG: Isso vai imprimir no terminal do servidor o que chegou do HTML
+    print("===== DADOS QUE CHEGARAM DO FRONTEND =====")
+    print(payload)
+    print("==========================================")
+
     db = conectar_db()
     try:
         with db.cursor() as cursor:
-            # --- SEU CÓDIGO COMEÇA AQUI ---
-            horario = payload.get('horario')
-            prioridade = payload.get('prioridade')
-
-            # Debug para você ver o que está acontecendo antes de enviar ao banco
-            print(f"DEBUG: Indo para o SQL -> Horário: '{horario}', Prioridade: '{prioridade}'")
-
-            sql = """
+            # Usando a sua nova coluna 'hora' em vez de 'horario'
+            sql_pedido = """
                 INSERT INTO db_pedido_pedidos 
-                (pedido_id, cliente, data_emissao, horario, prioridade, valor_total, itens_json, status)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, 'criado')
+                (pedido_id, cliente_id, data_emissao, valor_total, status, correlation_id, tipo_vale, itens_json, cliente, hora, prioridade) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
             
-            # Aqui passamos os 7 valores conforme o SQL acima
-            cursor.execute(sql, (
-                payload.get('pedido_id'), 
-                payload.get('cliente'), 
-                payload.get('data'), 
-                horario, 
-                prioridade, 
-                payload.get('total'), 
-                payload.get('itens_json')
+            cursor.execute(sql_pedido, (
+                payload.get('pedido_id'),               
+                payload.get('pedido_id'),               
+                payload.get('data'),                    
+                payload.get('total'),                   
+                'criado',                               
+                payload.get('pedido_id'),               
+                'pecas',                                
+                payload.get('itens_json'),              
+                payload.get('cliente'),                 
+                payload.get('horario'), # <<< A string "08:00 às 10:00" vai ser salva na nova coluna 'hora'
+                payload.get('prioridade')               
             ))
-            # --- SEU CÓDIGO TERMINA AQUI ---
-
             db.commit()
             return {"status": "sucesso"}
-            
     except Exception as e:
-        print(f"ERRO SQL: {e}")
+        db.rollback()
+        # Se falhar, o erro vermelho vai aparecer no terminal para você ler
+        print(f"Erro no INSERT: {e}") 
         return {"status": "erro", "msg": str(e)}, 500
-    finally:
-        db.close()
 
         
-# ROTA DE MÉTRICAS CORRIGIDA PARA O SEU BANCO REAL
 @app.get("/metrics")
 def metrics():
     db = conectar_db()
     try:
         with db.cursor() as cursor:
-            # Ajustado para db_pedido_pedidos
             cursor.execute("SELECT COUNT(*) as qtd FROM db_pedido_pedidos WHERE status='criado'")
             criados = cursor.fetchone()['qtd']
             cursor.execute("SELECT COUNT(*) as qtd FROM db_pedido_pedidos WHERE status='confirmado'")
@@ -97,13 +75,11 @@ def metrics():
             cursor.execute("SELECT COUNT(*) as qtd FROM db_pedido_pedidos WHERE status='cancelado'")
             cancelados = cursor.fetchone()['qtd']
             
-            # Ajustado para db_pedido_pedidos e coluna data_emissao
             cursor.execute("SELECT pedido_id, correlation_id, status, data_emissao FROM db_pedido_pedidos ORDER BY data_emissao DESC LIMIT 50")
             recentes = cursor.fetchall()
             
             for r in recentes:
                 if r['data_emissao']:
-                    # Converte a data/datetime para string para evitar erro de JSON
                     r['data_emissao'] = str(r['data_emissao'])
             
             return {
@@ -118,10 +94,17 @@ def metrics():
     finally:
         db.close()
 
-@app.get("/api/horarios-ocupados/{data}")
-def listar_ocupados(data: str):
+@app.get("/api/horarios-ocupados")
+def get_horarios_ocupados(data: str):
     db = conectar_db()
-    with db.cursor() as cursor:
-        cursor.execute("SELECT horario FROM db_pedido_pedidos WHERE data_emissao = %s", (data,))
-        resultados = cursor.fetchall()
-        return [r['horario'] for r in resultados]
+    try:
+        with db.cursor() as cursor:
+            # Como agora o horário é inserido como texto, ele vai retornar um array com as strings dos horários ocupados.
+            sql = "SELECT horario FROM db_pedido_pedidos WHERE data_emissao = %s"
+            cursor.execute(sql, (data,))
+            resultados = cursor.fetchall()
+            
+            lista_ocupados = [r['horario'] for r in resultados]
+            return {"ocupados": lista_ocupados}
+    finally:
+        db.close()
