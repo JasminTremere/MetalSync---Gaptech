@@ -62,7 +62,7 @@ def listar_pedidos():
             sql = """
                 SELECT pedido_id, data_emissao, cliente, horario, prioridade, valor_total, itens_json 
                 FROM db_pedido_pedidos 
-                ORDER BY data_emissao DESC
+                ORDER BY data_emissao DESC, horario ASC
             """
             cursor.execute(sql)
             resultados = cursor.fetchall()
@@ -84,7 +84,7 @@ def listar_clientes():
     db = conectar_db()
     try:
         with db.cursor() as cursor:
-            sql = "SELECT DISTINCT cliente FROM db_pedido_pedidos WHERE cliente IS NOT NULL AND cliente != '' ORDER BY cliente"
+            sql = "SELECT DISTINCT cliente FROM db_pedido_pedidos WHERE cliente IS NOT NULL AND cliente != '' ORDER BY cliente;"
             cursor.execute(sql)
             return {"clientes": [r['cliente'] for r in cursor.fetchall()]}
     except Exception as e:

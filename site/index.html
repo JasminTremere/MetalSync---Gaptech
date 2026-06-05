@@ -32,9 +32,9 @@
                 <button onclick="mostrarPaginaPedidos()" class="bg-slate-850 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-750 p-2.5 rounded-xl transition-all" title="Visualizar Pedidos Solicitados">
                     <i class="fa-solid fa-list-check text-blue-400 text-base"></i>
                 </button>
-                <button onclick="abrirGerenciadorGrade()" class="bg-slate-850 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-750 p-2.5 rounded-xl transition-all active:scale-95" title="Gerenciar Grade de Produção e Atrasos">
+                <!-- <button onclick="abrirGerenciadorGrade()" class="bg-slate-850 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-750 p-2.5 rounded-xl transition-all active:scale-95" title="Gerenciar Grade de Produção e Atrasos">
                     <i class="fa-solid fa-clock-rotate-left text-blue-400 text-base"></i>
-                </button>
+                </button> -->
             </div>
         </div>
     </header>
@@ -510,164 +510,179 @@
         }
 
         function renderizarPaginaPedidos() {
-            const container = document.getElementById('ordersCardsContainer');
-            container.innerHTML = '';
+    const container = document.getElementById('ordersCardsContainer');
+    container.innerHTML = '';
 
-            const buscaCliente = document.getElementById('filterClient').value.trim().toLowerCase();
-            const buscaData = document.getElementById('filterDate').value;
+    const buscaCliente = document.getElementById('filterClient').value.trim().toLowerCase();
+    const buscaData = document.getElementById('filterDate').value;
 
-            let pedidosFiltrados = todosPedidosBanco;
+    let pedidosFiltrados = todosPedidosBanco;
 
-            if (buscaData) {
-                pedidosFiltrados = pedidosFiltrados.filter(p => p.data_emissao === buscaData);
-            }
-            if (buscaCliente) {
-                pedidosFiltrados = pedidosFiltrados.filter(p => p.cliente && p.cliente.toLowerCase().includes(buscaCliente));
-            }
+    if (buscaData) {
+        pedidosFiltrados = pedidosFiltrados.filter(p => p.data_emissao === buscaData);
+    }
+    if (buscaCliente) {
+        pedidosFiltrados = pedidosFiltrados.filter(p => p.cliente && p.cliente.toLowerCase().includes(buscaCliente));
+    }
 
-            if (pedidosFiltrados.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-10 border border-slate-800 border-dashed rounded-xl bg-slate-900/30">
-                        <i class="fa-solid fa-folder-open text-slate-650 text-3xl mb-3 block"></i>
-                        <span class="text-xs text-slate-500 font-medium">Nenhum pedido localizado no banco de dados.</span>
-                    </div>
-                `;
-                return;
-            }
+    if (pedidosFiltrados.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-10 border border-slate-800 border-dashed rounded-xl bg-slate-900/30">
+                <i class="fa-solid fa-folder-open text-slate-650 text-3xl mb-3 block"></i>
+                <span class="text-xs text-slate-500 font-medium">Nenhum pedido localizado no banco de dados.</span>
+            </div>
+        `;
+        return;
+    }
 
-            let agrupados = {};
-            pedidosFiltrados.forEach(p => {
-                const dataStr = p.data_emissao || "Data Não Definida";
-                if (!agrupados[dataStr]) agrupados[dataStr] = [];
-                agrupados[dataStr].push(p);
-            });
+    // 1. Agrupa os pedidos por data
+    let agrupados = {};
+    pedidosFiltrados.forEach(p => {
+        const dataStr = p.data_emissao || "Data Não Definida";
+        if (!agrupados[dataStr]) agrupados[dataStr] = [];
+        agrupados[dataStr].push(p);
+    });
 
-            const datasOrdenadas = Object.keys(agrupados).sort((a, b) => b.localeCompare(a));
+    // 2. Ordena as datas da mais recente para a mais antiga (DESC)
+    const datasOrdenadas = Object.keys(agrupados).sort((a, b) => b.localeCompare(a));
 
-            datasOrdenadas.forEach(data => {
-                const labelData = data === "Data Não Definida" ? data : formatarDataBr(data);
-                
-                let dataHtml = `
-                    <div class="flex flex-col gap-4">
-                        <div class="flex items-center gap-2 border-b border-slate-800 pb-2 mt-4">
-                            <span class="bg-blue-600/10 text-blue-400 p-1.5 rounded-lg text-xs"><i class="fa-solid fa-calendar"></i></span>
-                            <h3 class="text-xs font-black text-slate-300 uppercase tracking-wider">${labelData}</h3>
-                        </div>
-                `;
+    datasOrdenadas.forEach(data => {
+        const labelData = data === "Data Não Definida" ? data : formatarDataBr(data);
+        
+        let dataHtml = `
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center gap-2 border-b border-slate-800 pb-2 mt-4">
+                    <span class="bg-blue-600/10 text-blue-400 p-1.5 rounded-lg text-xs"><i class="fa-solid fa-calendar"></i></span>
+                    <h3 class="text-xs font-black text-slate-300 uppercase tracking-wider">${labelData}</h3>
+                </div>
+        `;
 
-                agrupados[data].forEach(p => {
-                    let badgeClass = "text-blue-400 bg-blue-500/10 border-blue-500/20";
-                    if (p.prioridade === "Baixa") badgeClass = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
-                    if (p.prioridade === "Alta") badgeClass = "text-red-400 bg-red-500/10 border-red-500/20";
+        // ---------------------------------------------------------
+        // O SEGREDO ESTÁ AQUI: Ordena os horários do menor para o maior (ASC)
+        // ---------------------------------------------------------
+        agrupados[data].sort((a, b) => {
+            const horaA = a.horario || a.hora || "";
+            const horaB = b.horario || b.hora || "";
+            return horaA.localeCompare(horaB); 
+        });
 
-                    let itensTabelaRowsHtml = '';
-                    if (p.itens && p.itens.length > 0) {
-                        p.itens.forEach(item => {
-                            itensTabelaRowsHtml += `
-                                <tr class="border-b border-slate-800/60 text-slate-300">
-                                    <td class="py-2 px-3 text-center font-bold text-slate-400">${item.quant}</td>
-                                    <td class="py-2 px-3">${item.descricao || "Item sem descrição"}</td>
-                                    <td class="py-2 px-3 text-right font-mono text-xs">${formatarMoeda(item.valor || 0)}</td>
-                                    <td class="py-2 px-3 text-right font-mono text-xs font-semibold text-slate-100">${formatarMoeda(item.quant * item.valor)}</td>
-                                </tr>
-                            `;
-                        });
-                    } else {
-                        itensTabelaRowsHtml = `<tr><td colspan="4" class="py-3 px-3 text-center text-xs italic text-slate-600">Sem itens detalhados</td></tr>`;
-                    }
+        agrupados[data].forEach(p => {
+            let badgeClass = "text-blue-400 bg-blue-500/10 border-blue-500/20";
+            if (p.prioridade === "Baixa") badgeClass = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+            if (p.prioridade === "Alta") badgeClass = "text-red-400 bg-red-500/10 border-red-500/20";
 
-                    const cardHtml = `
-                        <div class="border border-slate-800 bg-slate-950/45 p-4 rounded-xl flex flex-col gap-4 hover:border-slate-700 transition-all">
-                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-                                <div class="flex items-center gap-2.5 flex-wrap">
-                                    <span class="text-[10px] text-slate-500 font-mono">#${(p.pedido_id || "").split('-')[1] || p.pedido_id}</span>
-                                    <span class="text-xs font-bold text-slate-100 bg-slate-800 border border-slate-700 px-2.5 py-1 rounded flex items-center gap-1.5 font-mono">
-                                        <i class="fa-solid fa-clock text-blue-400 text-xs"></i> ${p.hora || p.horario || "Sem Horário"}
-                                    </span>
-                                    <strong class="text-sm text-slate-200 tracking-tight">${p.cliente || "Cliente Indefinido"}</strong>
-                                    <span class="text-[9px] uppercase font-bold border rounded px-1.5 py-0.5 ${badgeClass}">${p.prioridade || "Media"}</span>
-                                </div>
-                            </div>
-                            <div class="overflow-x-auto w-full border border-slate-850 rounded-lg bg-slate-900/40 custom-scrollbar">
-                                <table class="w-full text-left border-collapse text-xs">
-                                    <thead>
-                                        <tr class="text-[10px] font-bold text-slate-500 border-b border-slate-800 bg-slate-900/80 uppercase tracking-wider">
-                                            <th class="py-2 px-3 w-16 text-center">Quant.</th>
-                                            <th class="py-2 px-3">Descrição do Item</th>
-                                            <th class="py-2 px-3 w-32 text-right">Valor Unitário</th>
-                                            <th class="py-2 px-3 w-32 text-right">Subtotal</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>${itensTabelaRowsHtml}</tbody>
-                                </table>
-                            </div>
-                            <div class="flex justify-end items-center text-xs border-t border-slate-800/80 pt-3">
-                                <div class="text-right">
-                                    <span class="text-[10px] text-slate-500 block uppercase font-bold">Valor Total do Pedido</span>
-                                    <span class="text-sm font-bold text-emerald-400">${formatarMoeda(parseFloat(p.valor_total) || 0)}</span>
-                                </div>
-                            </div>
-                        </div>
+            let itensTabelaRowsHtml = '';
+            if (p.itens && p.itens.length > 0) {
+                p.itens.forEach(item => {
+                    itensTabelaRowsHtml += `
+                        <tr class="border-b border-slate-800/60 text-slate-300">
+                            <td class="py-2 px-3 text-center font-bold text-slate-400">${item.quant}</td>
+                            <td class="py-2 px-3">${item.descricao || "Item sem descrição"}</td>
+                            <td class="py-2 px-3 text-right font-mono text-xs">${formatarMoeda(item.valor || 0)}</td>
+                            <td class="py-2 px-3 text-right font-mono text-xs font-semibold text-slate-100">${formatarMoeda(item.quant * item.valor)}</td>
+                        </tr>
                     `;
-                    dataHtml += cardHtml;
                 });
-                dataHtml += `</div>`;
-                container.insertAdjacentHTML('beforeend', dataHtml);
-            });
-        }
+            } else {
+                itensTabelaRowsHtml = `<tr><td colspan="4" class="py-3 px-3 text-center text-xs italic text-slate-600">Sem itens detalhados</td></tr>`;
+            }
 
-        // RENDERIZA A GRADE DO PLANER OPERACIONAL
-async function renderizarGradeGerenciador() {
+            const cardHtml = `
+                <div class="border border-slate-800 bg-slate-950/45 p-4 rounded-xl flex flex-col gap-4 hover:border-slate-700 transition-all">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                        <div class="flex items-center gap-2.5 flex-wrap">
+                            <span class="text-[10px] text-slate-500 font-mono">#${(p.pedido_id || "").split('-')[1] || p.pedido_id}</span>
+                            <span class="text-xs font-bold text-slate-100 bg-slate-800 border border-slate-700 px-2.5 py-1 rounded flex items-center gap-1.5 font-mono">
+                                <i class="fa-solid fa-clock text-blue-400 text-xs"></i> ${p.hora || p.horario || "Sem Horário"}
+                            </span>
+                            <strong class="text-sm text-slate-200 tracking-tight">${p.cliente || "Cliente Indefinido"}</strong>
+                            <span class="text-[9px] uppercase font-bold border rounded px-1.5 py-0.5 ${badgeClass}">${p.prioridade || "Media"}</span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto w-full border border-slate-850 rounded-lg bg-slate-900/40 custom-scrollbar">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="text-[10px] font-bold text-slate-500 border-b border-slate-800 bg-slate-900/80 uppercase tracking-wider">
+                                    <th class="py-2 px-3 w-16 text-center">Quant.</th>
+                                    <th class="py-2 px-3">Descrição do Item</th>
+                                    <th class="py-2 px-3 w-32 text-right">Valor Unitário</th>
+                                    <th class="py-2 px-3 w-32 text-right">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>${itensTabelaRowsHtml}</tbody>
+                        </table>
+                    </div>
+                    <div class="flex justify-end items-center text-xs border-t border-slate-800/80 pt-3">
+                        <div class="text-right">
+                            <span class="text-[10px] text-slate-500 block uppercase font-bold">Valor Total do Pedido</span>
+                            <span class="text-sm font-bold text-emerald-400">${formatarMoeda(parseFloat(p.valor_total) || 0)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            dataHtml += cardHtml;
+        });
+        dataHtml += `</div>`;
+        container.insertAdjacentHTML('beforeend', dataHtml);
+    });
+}
+        async function renderizarGradeGerenciador() {
     const data = document.getElementById('orderDate').value;
     const container = document.getElementById('managerSlotsContainer');
     
-    // Mostra um carregando enquanto busca no banco
-    container.innerHTML = '';
+    // Mostra a data selecionada no topo (como você pediu)
+    document.getElementById('managerDateDisplay').innerText = formatarDataBr(data);
+    
+    container.innerHTML = '<div class="text-center py-4 text-xs text-slate-500 italic">Carregando...</div>';
 
     try {
-        // Busca os pedidos do dia no seu backend Python
         const response = await fetch(`http://localhost:8001/api/horarios-ocupados?data=${data}`);
         const dataRes = await response.json();
-        const pedidosDoDia = dataRes.pedidos_dia || [];
+        const pedidos = dataRes.pedidos || []; 
         
         container.innerHTML = '';
         
-        // Grade fixa de 2 em 2 horas
+        // Esta é a ordem fixa que você definiu
         const gradeFixa = [
-            "07:00 às 09:00", "09:00 às 11:00", "11:00 às 13:00", 
-            "13:00 às 15:00", "15:00 às 17:00", "17:00 às 19:00"
+            "07:00 às 09:00", 
+            "09:00 às 11:00", 
+            "11:00 às 13:00", 
+            "13:00 às 15:00", 
+            "15:00 às 17:00", 
+            "17:00 às 19:00"
         ];
 
+        // Renderiza cada horário da lista fixa
         gradeFixa.forEach(slot => {
-    // Procura se existe algum pedido para ESSE slot específico
-    const p = pedidos.find(item => item.horario === slot);
-    
-    if (p) {
-                // CARD RESERVADO (Preenchido)
+            const p = pedidos.find(item => item.horario === slot);
+            
+            if (p) {
+                // Renderiza o pedido encontrado
                 container.insertAdjacentHTML('beforeend', `
-                    <div class="bg-slate-950 border-l-4 border-l-blue-500 border border-slate-700 p-3 rounded-md flex justify-between items-center shadow-md">
+                    <div class="bg-slate-950 border border-slate-700 border-l-4 border-l-blue-500 p-3 rounded-md flex justify-between items-center shadow-md">
                         <div class="flex flex-col">
-                            <span class="text-[10px] text-blue-400 font-bold uppercase">${slot}</span>
+                            <span class="text-[10px] text-blue-400 font-bold uppercase">${p.horario}</span>
                             <span class="text-xs text-white font-semibold">${p.cliente}</span>
+                            <span class="text-[9px] text-slate-400">Prioridade: ${p.prioridade}</span>
                         </div>
                         <div class="flex gap-1">
-                            <button onclick="iniciarReagendamentoSlot('${slot}')" class="text-[9px] bg-slate-800 text-slate-300 px-2 py-1 rounded hover:bg-slate-700">EDIT</button>
-                            <button onclick="passarPeçaNaFrente('${slot}')" class="text-[9px] bg-indigo-600 text-white px-2 py-1 rounded hover:bg-indigo-500">NEXT</button>
+                            <button onclick="prepararEdicao('${p.pedido_id}', '${p.horario}')" class="bg-slate-800 text-slate-300 px-2 py-1 rounded text-[10px] hover:bg-slate-700">EDIT</button>
+                            <button onclick="executarPassarFrente('${p.pedido_id}', '${p.horario}')" class="bg-indigo-600 text-white px-2 py-1 rounded text-[10px] hover:bg-indigo-500">NEXT</button>
                         </div>
                     </div>
                 `);
             } else {
-                // CARD DISPONÍVEL (Tracejado)
+                // Renderiza o espaço vazio (Disponível)
                 container.insertAdjacentHTML('beforeend', `
-                    <div class="border border-slate-700 border-dashed p-3 rounded-md flex justify-between items-center opacity-50">
+                    <div class="border border-slate-800 border-dashed bg-slate-900/10 p-3 rounded-md flex justify-between items-center opacity-40">
                         <span class="text-[10px] font-bold text-slate-600 uppercase">${slot}</span>
-                        <span class="text-[9px] text-emerald-600 font-bold uppercase">Disponível</span>
+                        <span class="text-[9px] text-slate-500 font-bold uppercase">Disponível</span>
                     </div>
                 `);
             }
         });
     } catch (e) {
-        container.innerHTML = `<div class="text-red-500 text-xs text-center">Erro ao conectar ao banco.</div>`;
+        container.innerHTML = `<div class="text-red-500 text-xs text-center">Erro ao carregar dados.</div>`;
     }
 }
         /* ----- Lógica de Lançamento ----- */
