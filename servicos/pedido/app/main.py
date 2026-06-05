@@ -54,7 +54,7 @@ def criar_pedido(payload: dict):
 
     # Disparo para o n8n
     # host.docker.internal resolve para o IP do seu PC a partir de dentro do container
-    url_n8n = "http://host.docker.internal:5678/webhook/1aa06e03-1e82-4e6f-b1bf-99430b0cdb7b"
+    url_n8n = "http://host.docker.internal:5678/webhook-test/1aa06e03-1e82-4e6f-b1bf-99430b0cdb7b"
     try:
         resposta = requests.post(url_n8n, json=payload, timeout=5)
         print(f"Sucesso: Dados enviados ao n8n. Status: {resposta.status_code}")
